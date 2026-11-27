@@ -42,7 +42,7 @@ class HomePage extends GetView<HomeController> {
               crossAxisAlignment: .stretch,
               children: [
                 // 左侧时钟占四成，右侧卡片占六成
-                Expanded(flex: 4, child: _buildClock()),
+                Expanded(flex: 3, child: _buildClock()),
                 Expanded(
                   flex: 6,
                   child: Column(
@@ -75,12 +75,14 @@ class HomePage extends GetView<HomeController> {
           mainAxisSize: .min,
           crossAxisAlignment: .start,
           children: [
-            // 背景图为深色，时间用浅色文字保证可读，压到单行不换行
+            // 黄底时间：高度随文字自适应，压缩行高去掉字形下方的行高留白
             Text(
               controller.time.value,
               // 字体继承全局 ZCOOL，只有 Regular 一种字重，不再指定 w300
               style: const TextStyle(
                 fontSize: 120,
+                // 行高压到字号的 0.8，黄块紧贴数字；按比例缩放，换字号/字体无需改这里
+                height: 1,
                 // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
@@ -96,15 +98,15 @@ class HomePage extends GetView<HomeController> {
                     controller.date.value,
                     // 日期与星期沿用时间的字体，保持视觉统一
                     style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white70,
+                      fontSize: 26,
+                      color: Color.fromARGB(255, 230, 230, 230),
                     ),
                   ),
                   Text(
                     controller.weekday.value,
                     style: const TextStyle(
                       fontSize: 20,
-                      color: Colors.white70,
+                      color: Color.fromARGB(255, 220, 220, 220),
                     ),
                   ),
                 ],
