@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# 本地下载的壁纸素材，不纳入版本管理（前缀匹配）
+/assets/images/wallhaven*

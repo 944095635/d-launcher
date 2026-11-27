@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:math';
+
+import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -25,8 +28,20 @@ class HomeController extends GetxController {
   /// 当前获得焦点的卡片索引，遥控器左右键切换
   final focusedIndex = 0.obs;
 
+  /// 首页背景图路径，定时从 images 目录随机切换
+  final backgroundImage = ''.obs;
+
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
   static const _maxApps = 4;
+  static const _backgroundInterval = Duration(minutes: 30);
+  static const _imageDir = 'assets/images/';
+  /// 卡片贴图不参与背景轮换，避免背景与卡片撞图
+  static const _cardImagePrefix = 'card_';
+
+  Timer? _backgroundTimer;
+  /// 背景候选图，供定时轮换与手动刷新共用
+  List<String> _backgroundImages = const [];
+  final _random = Random();
 
   @override
   void onInit() {
@@ -35,6 +50,7 @@ class HomeController extends GetxController {
     // 只显示到分钟，对齐到下一分钟边界刷新，避免无意义的每秒重建
     _scheduleNextTick();
     _initApps();
+    _startBackgroundRotation();
   }
 
   /// 添加 App，超出上限则忽略，保证卡片不超过 4 张
@@ -93,9 +109,53 @@ class HomeController extends GetxController {
     weekday.value = _weekdays[now.weekday - 1];
   }
 
+  /// 启动背景轮换：先随机选一张，之后每 30 分钟换一次
+  Future<void> _startBackgroundRotation() async {
+    _backgroundImages = await _loadBackgroundImages();
+    if (_backgroundImages.isEmpty) return;
+    _rotateBackground();
+    _backgroundTimer = Timer.periodic(
+      _backgroundInterval,
+      (_) => _rotateBackground(),
+    );
+  }
+
+  /// 手动换一张背景（遥控器后退键触发），不重置 30 分钟定时器
+  void refreshBackground() => _rotateBackground();
+
+  /// 从打包清单读取 images 目录下的图片路径，排除卡片贴图
+  /// 新版 Flutter 不再生成 AssetManifest.json，必须用官方 API 读清单
+  Future<List<String>> _loadBackgroundImages() async {
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    return manifest.listAssets()
+        .where((path) => path.startsWith(_imageDir))
+        .where(
+          (path) => !path
+              .substring(_imageDir.length)
+              .startsWith(_cardImagePrefix),
+        )
+        .toList();
+  }
+
+  /// 随机挑一张作为背景；只有一张时不重复赋值，避免无意义重建
+  void _rotateBackground() {
+    final images = _backgroundImages;
+    if (images.isEmpty) return;
+    if (images.length == 1) {
+      if (backgroundImage.value != images.first) {
+        backgroundImage.value = images.first;
+      }
+      return;
+    }
+    // 避开当前这张，保证每次轮换视觉上确实变化
+    final candidates = images.where((p) => p != backgroundImage.value).toList();
+    backgroundImage.value = candidates[_random.nextInt(candidates.length)];
+  }
+
   @override
   void onClose() {
     _timer?.cancel();
+    _backgroundTimer?.cancel();
     super.onClose();
   }
 

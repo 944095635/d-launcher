@@ -14,7 +14,7 @@ class CharacterCard extends StatelessWidget {
 
   /// 卡片尺寸，供外层布局计算平移与容器大小
   static const width = 200.0;
-  static const height = 360.0;
+  static const height = 300.0;
 
   /// 顶边相对底边的右移比例，决定斜切程度；外层布局按此补偿间隔
   static const skewRatio = 0.28;
@@ -39,6 +39,22 @@ class CharacterCard extends StatelessWidget {
 
   /// 卡片内容，暂为空，后续按需填充
   final Widget? child;
+
+  /// 图片淡入：缓存命中（切焦点重建）直接显示，只有首次解码完成才渐变出现
+  Widget _fadeInBuilder(
+    BuildContext context,
+    Widget child,
+    int? frame,
+    bool wasSynchronouslyLoaded,
+  ) {
+    if (wasSynchronouslyLoaded) return child;
+    return AnimatedOpacity(
+      opacity: frame == null ? 0 : 1,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +87,13 @@ class CharacterCard extends StatelessWidget {
                             imageAsset!,
                             fit: BoxFit.cover,
                             cacheHeight: (height * cacheScale).round(),
+                            frameBuilder: _fadeInBuilder,
                           )
                         : Image.asset(
                             imageAsset!,
                             fit: BoxFit.cover,
                             cacheHeight: (height * cacheScale).round(),
+                            frameBuilder: _fadeInBuilder,
                           ),
                   ),
                 ?child,
@@ -86,7 +104,11 @@ class CharacterCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
-                        colors: [Colors.black, Colors.transparent],
+                        colors: [
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                        stops: [0, .8],
                       ),
                     ),
                   ),

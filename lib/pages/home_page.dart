@@ -22,42 +22,49 @@ class HomePage extends GetView<HomeController> {
   /// 页面主体：背景图铺满，内容为左右布局
   Widget _buildBody() {
     return Stack(
+      fit: .expand,
       children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/home_background.png',
-            fit: BoxFit.cover,
-            cacheWidth: 600,
-            // 备用网络背景：image: NetworkImage("https://w.wallhaven.cc/full/qr/wallhaven-qr5vmq.jpg")
-            // colorFilter: ColorFilter.mode(Colors.white, BlendMode.color),
+        // 背景由控制器定时随机切换，换图时淡入避免突变
+        Obx(
+          () => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 800),
+            // AnimatedSwitcher 内部是 Stack，child 需显式撑满才能 cover 铺满
+            child: SizedBox.expand(
+              key: ValueKey(controller.backgroundImage.value),
+              child: controller.backgroundImage.value.isEmpty
+                  ? const SizedBox.shrink()
+                  : Image.asset(
+                      controller.backgroundImage.value,
+                      fit: BoxFit.cover,
+                      cacheHeight: 2160,
+                    ),
+            ),
           ),
         ),
         // 内容层同样铺满，给 Row 的 Expanded 与 stretch 提供紧约束
-        Positioned.fill(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-            child: Row(
-              // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
-              spacing: 40,
-              crossAxisAlignment: .stretch,
-              children: [
-                // 左侧时钟占四成，右侧卡片占六成
-                Expanded(flex: 3, child: _buildClock()),
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    crossAxisAlignment: .stretch,
-                    children: [
-                      Spacer(),
-                      Expanded(
-                        flex: 2,
-                        child: _buildCards(),
-                      ),
-                    ],
-                  ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          child: Row(
+            // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
+            spacing: 40,
+            crossAxisAlignment: .stretch,
+            children: [
+              // 左侧时钟占四成，右侧卡片占六成
+              Expanded(flex: 3, child: _buildClock()),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: .stretch,
+                  children: [
+                    Spacer(),
+                    Expanded(
+                      flex: 2,
+                      child: _buildCards(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -182,6 +189,11 @@ class HomePage extends GetView<HomeController> {
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
         if (event is KeyDownEvent) controller.openFocusedApp();
+        return KeyEventResult.handled;
+      // 后退键：手动换一张背景，只按下的瞬间触发，不影响定时轮换
+      case LogicalKeyboardKey.escape:
+      case LogicalKeyboardKey.goBack:
+        if (event is KeyDownEvent) controller.refreshBackground();
         return KeyEventResult.handled;
       default:
         return KeyEventResult.ignored;
