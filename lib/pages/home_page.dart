@@ -154,7 +154,7 @@ class HomePage extends GetView<HomeController> {
                     child: CharacterCard(
                       name: controller.apps[i].name,
                       backgroundColor:
-                          controller.apps[i].backgroundColor ?? Colors.white,
+                          controller.apps[i].backgroundColor ?? Colors.black,
                       imageAsset: controller.apps[i].imageAsset,
                       textColor: controller.apps[i].textColor,
                       // 当前焦点卡片高亮

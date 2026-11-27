@@ -5,7 +5,7 @@ class CharacterCard extends StatelessWidget {
   const CharacterCard({
     super.key,
     required this.name,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor = Colors.black,
     this.imageAsset,
     this.textColor = Colors.white,
     this.isFocused = false,
@@ -25,7 +25,7 @@ class CharacterCard extends StatelessWidget {
   /// 右下角显示的 App 名称
   final String name;
 
-  /// 卡面背景色，默认白
+  /// 卡面背景色，默认黑；有贴图时不绘制底色
   final Color backgroundColor;
 
   /// 卡面贴图，http(s) 开头走网络图，否则当作本地资源路径；为空则不显示
@@ -53,7 +53,11 @@ class CharacterCard extends StatelessWidget {
         width: width,
         height: height,
         child: CustomPaint(
-          painter: _CardPainter(color: backgroundColor, isFocused: isFocused),
+          painter: _CardPainter(
+            color: backgroundColor,
+            isFocused: isFocused,
+            hasImage: imageAsset != null,
+          ),
           child: ClipPath(
             clipper: _CardClipper(),
             child: Stack(
@@ -141,7 +145,11 @@ class _CardClipper extends CustomClipper<Path> {
 }
 
 class _CardPainter extends CustomPainter {
-  const _CardPainter({required this.color, required this.isFocused});
+  const _CardPainter({
+    required this.color,
+    required this.isFocused,
+    required this.hasImage,
+  });
 
   /// 由 App 背景色决定卡面底色
   final Color color;
@@ -149,17 +157,23 @@ class _CardPainter extends CustomPainter {
   /// 焦点态
   final bool isFocused;
 
+  /// 有贴图时贴图铺满卡面，底色被完全遮住，跳过绘制
+  final bool hasImage;
+
   @override
   void paint(Canvas canvas, Size size) {
     final path = _buildCardPath(size);
-    // 先画投影，再画底色卡面
+    // 先画投影
     canvas.drawPath(
       path,
       Paint()
         ..color = Colors.black54
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
-    canvas.drawPath(path, Paint()..color = color);
+    // 有贴图时底色被完全盖住，不必再画
+    if (!hasImage) {
+      canvas.drawPath(path, Paint()..color = color);
+    }
     // 焦点态：沿卡面轮廓由外向内叠三层发光，范围比单层描边更大更醒目
     if (isFocused) {
       // 外层大范围柔光
@@ -193,5 +207,7 @@ class _CardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CardPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.isFocused != isFocused;
+      oldDelegate.color != color ||
+      oldDelegate.isFocused != isFocused ||
+      oldDelegate.hasImage != hasImage;
 }

@@ -28,7 +28,7 @@ class AppInfo {
   /// 显式 Intent 携带的 int 参数，如 HDMI3 对应 input=25
   final Map<String, int>? launchIntExtras;
 
-  /// 卡片背景色，未指定时卡片用默认白色
+  /// 卡片背景色，未指定时卡片用默认黑色；有贴图时不绘制底色
   final Color? backgroundColor;
 
   /// 卡面贴图：http(s) 开头的网络地址或本地资源路径，未指定时只显示纯色卡面
