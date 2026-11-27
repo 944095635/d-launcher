@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
@@ -38,9 +40,16 @@ class HomePage extends GetView<HomeController> {
           Expanded(
             flex: 6,
             child: Column(
+              crossAxisAlignment: .stretch,
               children: [
                 Spacer(),
-                Expanded(flex: 2, child: _buildCards()),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    color: Colors.white30,
+                    child: _buildCards(),
+                  ),
+                ),
               ],
             ),
           ),
@@ -92,22 +101,31 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  /// 右侧四张卡片：顶部对齐、横向等距，整体等比缩放
+  /// 右侧四张卡片：水平等距、高低交替错落，整体等比缩放
   Widget _buildCards() {
-    // 横向等间距且大于卡宽，避免卡片互相遮挡；顶部对齐保证间隔视觉一致
-    const stepX = 200.0;
+    // 水平间隔由步长决定，需大于卡宽避免重叠；交替高低由倾角决定
+    const angle = 10 * pi / 180;
+    const step = 180.0;
+    final dx = step * cos(angle);
+    final dy = step * sin(angle);
+    // 斜切顶边右移，高低错开会让相邻缝隙宽窄交替；按高低差反向补偿水平位置
+    final skew = CharacterCard.width * CharacterCard.skewRatio;
+    final offsetX = skew * dy / CharacterCard.height;
     return FittedBox(
       fit: BoxFit.contain,
-      alignment: Alignment.centerLeft,
+      alignment: Alignment.centerRight,
       child: SizedBox(
-        width: 840,
-        height: 590,
+        // 容器按卡片实际占位计算，改角度或尺寸无需手调
+        width: 30 + 3 * dx - offsetX + CharacterCard.width + 30,
+        height: 30 + dy + CharacterCard.height + 30,
         child: Stack(
           children: [
             for (var i = 0; i < 4; i++)
               Positioned(
-                left: 30 + i * stepX,
-                top: 30,
+                // 低的卡左移，抵消斜切造成的缝隙变宽
+                left: 30 + i * dx - (i.isOdd ? offsetX : 0),
+                // 奇偶交替：偶数在上、奇数在下，形成高低高低的节奏
+                top: 30 + (i.isOdd ? dy : 0),
                 child: const CharacterCard(),
               ),
           ],

@@ -4,14 +4,21 @@ import 'package:material_ui/material_ui.dart';
 class CharacterCard extends StatelessWidget {
   const CharacterCard({super.key, this.child});
 
+  /// 卡片尺寸，供外层布局计算平移与容器大小
+  static const width = 200.0;
+  static const height = 360.0;
+
+  /// 顶边相对底边的右移比例，决定斜切程度；外层布局按此补偿间隔
+  static const skewRatio = 0.28;
+
   /// 卡片内容，暂为空，后续按需填充
   final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 200,
-      height: 500,
+      width: width,
+      height: height,
       child: CustomPaint(
         painter: _CardPainter(),
         child: ClipPath(
@@ -28,7 +35,7 @@ const _radius = 16.0;
 
 /// 生成带圆角的斜切梯形：顶边窄且右移，四角倒圆角，painter 与 clipper 共用
 Path _buildCardPath(Size size) {
-  final inset = size.width * 0.18;
+  final inset = size.width * CharacterCard.skewRatio;
   // 顺时针四个顶点：左上、右上、右下、左下
   final points = [
     Offset(inset, 0),
