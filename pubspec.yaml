@@ -35,6 +35,7 @@ dependencies:
   # UI 组件与图标
   material_ui: ^1.11.1
   cupertino_icons: ^2.0.0
+  google_fonts: ^9.0.0
 
   # 状态管理 / 路由 / 依赖注入
   get:

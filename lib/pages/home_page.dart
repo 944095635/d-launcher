@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../controllers/home_controller.dart';
+import '../extensions/space_extension.dart';
+import '../widgets/character_card.dart';
 
 /// 桌面首页。
 class HomePage extends GetView<HomeController> {
@@ -24,56 +27,63 @@ class HomePage extends GetView<HomeController> {
           // colorFilter: ColorFilter.mode(Colors.white, BlendMode.color),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 60),
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
       child: Row(
+        // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
+        spacing: 40,
         crossAxisAlignment: .stretch,
         children: [
           // 左侧时钟占四成，右侧卡片占六成
           Expanded(flex: 4, child: _buildClock()),
-          const SizedBox(width: 40),
-          Expanded(flex: 6, child: _buildCards()),
+          Expanded(
+            flex: 6,
+            child: Column(
+              children: [
+                Spacer(),
+                Expanded(flex: 2, child: _buildCards()),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /// 左侧时钟：内部用固定设计尺寸，整体等比缩放到可用空间
+  /// 左侧时钟：按内容自适应后整体等比缩放到可用空间，避免溢出
   Widget _buildClock() {
     return FittedBox(
       fit: BoxFit.contain,
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-        // 以 1920×1080 电视为设计基准，实际按可用区域等比缩放
-        width: 720,
-        height: 420,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+      alignment: Alignment.topLeft,
+      // 不设固定尺寸，Column 按内容布局；FittedBox 拿到真实尺寸再统一缩放
+      child: Obx(
+        () => Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .start,
           children: [
             // 背景图为深色，时间用浅色文字保证可读，压到单行不换行
-            Obx(
-              () => Text(
-                controller.time.value,
-                style: const TextStyle(
+            Text(
+              controller.time.value,
+              // 时间套用 Science Gothic 字体，其余样式沿用原设置
+              style: GoogleFonts.scienceGothic(
+                textStyle: const TextStyle(
                   fontSize: 200,
-                  height: 1,
                   fontWeight: FontWeight.w300,
-                  color: Colors.white,
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            Obx(
-              () => Text(
-                controller.date.value,
-                style: const TextStyle(fontSize: 40, color: Colors.white70),
+            Text(
+              controller.date.value,
+              style: const TextStyle(
+                fontSize: 40,
+                color: Colors.white70,
               ),
             ),
-            const SizedBox(height: 8),
-            Obx(
-              () => Text(
-                controller.weekday.value,
-                style: const TextStyle(fontSize: 40, color: Colors.white70),
+            8.verticalSpace,
+            Text(
+              controller.weekday.value,
+              style: const TextStyle(
+                fontSize: 40,
+                color: Colors.white70,
               ),
             ),
           ],
@@ -82,22 +92,26 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  /// 右侧四个角色卡片，等宽横排
+  /// 右侧四张卡片：顶部对齐、横向等距，整体等比缩放
   Widget _buildCards() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        
-      ],
-    );
-  }
-
-  /// 单张卡片按原图比例显示，保留透明区域
-  Widget _buildCard(String asset) {
-    return Expanded(
-      child: AspectRatio(
-        aspectRatio: 559 / 873,
-        child: Image.asset(asset, fit: BoxFit.contain),
+    // 横向等间距且大于卡宽，避免卡片互相遮挡；顶部对齐保证间隔视觉一致
+    const stepX = 200.0;
+    return FittedBox(
+      fit: BoxFit.contain,
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: 840,
+        height: 590,
+        child: Stack(
+          children: [
+            for (var i = 0; i < 4; i++)
+              Positioned(
+                left: 30 + i * stepX,
+                top: 30,
+                child: const CharacterCard(),
+              ),
+          ],
+        ),
       ),
     );
   }

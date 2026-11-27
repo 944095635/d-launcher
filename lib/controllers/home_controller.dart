@@ -21,8 +21,18 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     _updateClock();
-    // 每秒刷新，只更新显示文本，由 Obx 局部重建
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
+    // 只显示到分钟，对齐到下一分钟边界刷新，避免无意义的每秒重建
+    _scheduleNextTick();
+  }
+
+  /// 调度到下一个整分钟再刷新，保证跳分时立即更新
+  void _scheduleNextTick() {
+    final now = DateTime.now();
+    final nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    _timer = Timer(nextMinute.difference(now), () {
+      _updateClock();
+      _scheduleNextTick();
+    });
   }
 
   /// 读取当前时间并格式化，仅值变化时触发刷新
