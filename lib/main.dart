@@ -1,20 +1,8 @@
-import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app/app.dart';
+
+/// 应用入口：只负责启动，具体配置在 App 中。
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+  runApp(const App());
 }
