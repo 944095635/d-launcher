@@ -33,13 +33,16 @@ dependencies:
     sdk: flutter
 
   # UI 组件与图标
-  material_ui: ^1.1.0
-  cupertino_icons: ^1.0.8
+  material_ui: ^1.11.1
+  cupertino_icons: ^2.0.0
 
   # 状态管理 / 路由 / 依赖注入
   get:
     git:
       url: https://github.com/jonataslaw/getx.git
+
+  # 本地持久化
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   # 测试
