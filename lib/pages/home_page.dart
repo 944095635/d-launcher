@@ -72,7 +72,7 @@ class HomePage extends GetView<HomeController> {
             // 背景图为深色，时间用浅色文字保证可读，压到单行不换行
             Text(
               controller.time.value,
-              // 时间套用本地 Science Gothic 字体，其余样式沿用原设置
+              // 时间使用本地 Science Gothic 字体
               style: const TextStyle(
                 fontFamily: 'ScienceGothic',
                 fontSize: 200,

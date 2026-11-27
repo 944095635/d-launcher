@@ -28,15 +28,14 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        // 电视是 armeabi-v7a（32 位 ARM），只保留该架构的原生库，避免打入无用 ABI 增大包体
-        ndk {
-            abiFilters += "armeabi-v7a"
-        }
     }
 
     buildTypes {
         release {
+            // 电视是 armeabi-v7a（32 位 ARM），只保留该架构的原生库，避免打入无用 ABI 增大包体
+            ndk {
+                abiFilters += "armeabi-v7a"
+            }
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")

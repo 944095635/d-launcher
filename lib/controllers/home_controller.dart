@@ -37,44 +37,6 @@ class HomeController extends GetxController {
     _initApps();
   }
 
-  /// 初始化桌面 App；后续从原生层读取安装列表时替换这里
-  void _initApps() {
-    apps.addAll(const [
-      // 哔哩哔哩：品牌色 #FF6182 做底色，配一张壁纸贴图
-      AppInfo(
-        name: '哔哩哔哩',
-        textColor: Color(0xFFFF6182),
-        packageName: 'com.xiaodianshi.tv.yst',
-        backgroundColor: Color(0xFFFF6182),
-        imageAsset: 'assets/images/wallhaven-pkq553.jpg',
-      ),
-      // 飞牛：品牌蓝底色 + 中心 logo，文字白色
-      AppInfo(
-        name: '飞牛Tv',
-        packageName: 'com.trim.tv',
-        textColor: Color(0xFF2D78F9),
-        backgroundColor: Color(0xFF2D78F9),
-        logoAsset: 'assets/images/feiniu_icon.png',
-        imageAsset: 'assets/images/wallhaven-9oekyx.jpg',
-      ),
-      // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3
-      AppInfo(
-        name: 'PC',
-        packageName: 'com.xiaomi.mitv.tvplayer',
-        textColor: Colors.black,
-        imageAsset: 'assets/images/wallhaven-yqww8d.png',
-        launchAction: 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY',
-        launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
-        launchIntExtras: {'input': 25},
-      ),
-      AppInfo(
-        name: 'TV',
-        textColor: Colors.black,
-        imageAsset: 'assets/images/wallhaven-rqwwvj.jpg',
-      ),
-    ]);
-  }
-
   /// 添加 App，超出上限则忽略，保证卡片不超过 4 张
   void addApp(AppInfo app) {
     if (apps.length >= _maxApps) return;
@@ -135,5 +97,43 @@ class HomeController extends GetxController {
   void onClose() {
     _timer?.cancel();
     super.onClose();
+  }
+
+  /// 初始化桌面 App；后续从原生层读取安装列表时替换这里
+  void _initApps() {
+    apps.addAll(const [
+      // 哔哩哔哩：品牌色 #FF6182 做底色，配一张本地插画贴图
+      AppInfo(
+        name: '哔哩哔哩',
+        textColor: Color(0xFFFF6182),
+        packageName: 'com.xiaodianshi.tv.yst',
+        backgroundColor: Color(0xFFFF6182),
+        imageAsset: 'assets/images/card_1.jpg',
+      ),
+      // 飞牛：品牌蓝底色 + 中心 logo，文字白色
+      AppInfo(
+        name: '飞牛',
+        packageName: 'com.trim.tv',
+        textColor: Color(0xFF2D78F9),
+        backgroundColor: Color(0xFF2D78F9),
+        logoAsset: 'assets/images/feiniu_icon.png',
+        imageAsset: 'assets/images/card_2.jpg',
+      ),
+      // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3
+      AppInfo(
+        name: 'PC',
+        packageName: 'com.xiaomi.mitv.tvplayer',
+        textColor: Colors.black,
+        imageAsset: 'assets/images/card_3.jpg',
+        launchAction: 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY',
+        launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
+        launchIntExtras: {'input': 25},
+      ),
+      AppInfo(
+        name: '月光',
+        textColor: Colors.black,
+        imageAsset: 'assets/images/card_4.jpg',
+      ),
+    ]);
   }
 }
