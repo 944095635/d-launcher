@@ -79,6 +79,18 @@ class CharacterCard extends StatelessWidget {
                           ),
                   ),
                 ?child,
+                // 底部黑色渐变蒙版：由底部全黑向上渐隐到全透明，垫在名称下提升可读性
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black, Colors.transparent],
+                      ),
+                    ),
+                  ),
+                ),
                 // 名称压在卡面右下角；右侧留出斜切量避免文字被裁
                 Positioned(
                   right: width * skewRatio + 12,
@@ -198,7 +210,7 @@ class _CardPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = Colors.white
+          ..color = Colors.white54
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
       );

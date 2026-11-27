@@ -120,9 +120,9 @@ class HomeController extends GetxController {
       ),
       // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3
       AppInfo(
-        name: 'PC',
+        name: '电脑',
         packageName: 'com.xiaomi.mitv.tvplayer',
-        textColor: Colors.black,
+        textColor: Color.fromARGB(255, 2, 176, 219),
         imageAsset: 'assets/images/card_3.jpg',
         launchAction: 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY',
         launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
@@ -130,7 +130,7 @@ class HomeController extends GetxController {
       ),
       AppInfo(
         name: '月光',
-        textColor: Colors.black,
+        textColor: Colors.grey,
         imageAsset: 'assets/images/card_4.jpg',
       ),
     ]);
