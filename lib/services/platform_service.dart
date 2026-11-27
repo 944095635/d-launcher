@@ -28,4 +28,17 @@ class PlatformService {
     });
     return result ?? false;
   }
+
+  /// 打开系统设置页面（遥控器菜单键），返回原生是否成功发起
+  /// 电视裁剪了设置入口时会失败，这里吞掉异常避免红屏
+  static Future<bool> openSettings({String? packageName}) async {
+    try {
+      final result = await invoke<bool>('openSettings', {
+        'packageName': packageName,
+      });
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
 }

@@ -6,11 +6,17 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/controllers/home_controller.dart';
+import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/widgets/character_card.dart';
 
 /// 桌面首页。
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
+
+  // 时钟文字的轻微投影，让浅色字在深浅不一的壁纸上都清晰
+  static const _textShadows = [
+    Shadow(offset: Offset(0, 2), blurRadius: 4, color: Colors.black54),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +98,7 @@ class HomePage extends GetView<HomeController> {
                 height: 1,
                 // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
                 fontFeatures: [FontFeature.tabularFigures()],
+                shadows: _textShadows,
               ),
             ),
             // 日期与星期整体右缩进，避免与时间左端齐平显得突出
@@ -107,6 +114,7 @@ class HomePage extends GetView<HomeController> {
                     style: const TextStyle(
                       fontSize: 26,
                       color: Color.fromARGB(255, 230, 230, 230),
+                      shadows: _textShadows,
                     ),
                   ),
                   Text(
@@ -114,6 +122,7 @@ class HomePage extends GetView<HomeController> {
                     style: const TextStyle(
                       fontSize: 20,
                       color: Color.fromARGB(255, 220, 220, 220),
+                      shadows: _textShadows,
                     ),
                   ),
                 ],
@@ -194,6 +203,10 @@ class HomePage extends GetView<HomeController> {
       case LogicalKeyboardKey.escape:
       case LogicalKeyboardKey.goBack:
         if (event is KeyDownEvent) controller.refreshBackground();
+        return KeyEventResult.handled;
+      // 菜单键：短按打开系统设置，长按重复不重复拉起
+      case LogicalKeyboardKey.contextMenu:
+        if (event is KeyDownEvent) PlatformService.openSettings();
         return KeyEventResult.handled;
       default:
         return KeyEventResult.ignored;

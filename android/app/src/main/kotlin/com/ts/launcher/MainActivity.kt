@@ -60,6 +60,20 @@ class MainActivity : FlutterActivity() {
                 startActivity(intent)
                 result.success(true)
             }
+            "openSettings" -> {
+                // 已确认小米电视设置包，直接拉起，不遍历、不试标准 Action
+                val packageName = call.argument<String>("packageName")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: "com.xiaomi.mitv.settings"
+                val intent = packageManager.getLaunchIntentForPackage(packageName)
+                if (intent == null) {
+                    result.error("SETTINGS_NOT_FOUND", "No launch intent for $packageName", null)
+                    return
+                }
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                result.success(true)
+            }
             else -> result.notImplemented()
         }
     }
