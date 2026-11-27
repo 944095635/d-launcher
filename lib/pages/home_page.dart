@@ -164,7 +164,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  /// 遥控器按键：左右切焦点，确认键暂留空
+  /// 遥控器按键：左右切焦点，确认键拉起当前应用
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
@@ -175,6 +175,11 @@ class HomePage extends GetView<HomeController> {
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowRight:
         controller.moveFocus(1);
+        return KeyEventResult.handled;
+      // 确认键只在按下瞬间触发一次，长按重复不重复拉起
+      case LogicalKeyboardKey.select:
+      case LogicalKeyboardKey.enter:
+        if (event is KeyDownEvent) controller.openFocusedApp();
         return KeyEventResult.handled;
       default:
         return KeyEventResult.ignored;

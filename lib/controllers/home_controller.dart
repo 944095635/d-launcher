@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../models/app_info.dart';
+import '../services/platform_service.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController {
@@ -63,7 +64,7 @@ class HomeController extends GetxController {
       ),
       AppInfo(
         name: 'TV',
-        textColor: Colors.white,
+        textColor: Colors.black,
         imageAsset: 'assets/images/wallhaven-rqwwvj.jpg',
       ),
     ]);
@@ -80,6 +81,13 @@ class HomeController extends GetxController {
     final count = apps.length;
     if (count == 0) return;
     focusedIndex.value = (focusedIndex.value + delta + count) % count;
+  }
+
+  /// 确认键：拉起当前焦点卡片对应的应用；没配包名或原生失败时忽略
+  Future<void> openFocusedApp() async {
+    final packageName = apps[focusedIndex.value].packageName;
+    if (packageName == null || packageName.isEmpty) return;
+    await PlatformService.launchApp(packageName);
   }
 
   /// 调度到下一个整分钟再刷新，保证跳分时立即更新

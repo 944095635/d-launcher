@@ -8,4 +8,10 @@ class PlatformService {
   static Future<T?> invoke<T>(String method, [dynamic arguments]) {
     return _channel.invokeMethod<T>(method, arguments);
   }
+
+  /// 按包名拉起应用，返回原生是否成功发起
+  static Future<bool> launchApp(String packageName) async {
+    final result = await invoke<bool>('launchApp', {'packageName': packageName});
+    return result ?? false;
+  }
 }
