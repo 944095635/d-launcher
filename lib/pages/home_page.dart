@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
@@ -122,33 +123,58 @@ class HomePage extends GetView<HomeController> {
     // 斜切顶边右移，高低错开会让相邻缝隙宽窄交替；按高低差反向补偿水平位置
     final skew = CharacterCard.width * CharacterCard.skewRatio;
     final offsetX = skew * dy / CharacterCard.height;
-    return FittedBox(
-      fit: BoxFit.contain,
-      alignment: Alignment.centerRight,
-      child: SizedBox(
-        // 容器按卡片实际占位计算，改角度或尺寸无需手调
-        width: 30 + 3 * dx - offsetX + CharacterCard.width + 30,
-        height: 30 + dy + CharacterCard.height + 30,
-        child: Obx(
-          () => Stack(
-            children: [
-              for (var i = 0; i < controller.apps.length; i++)
-                Positioned(
-                  // 低的卡左移，抵消斜切造成的缝隙变宽
-                  left: 30 + i * dx - (i.isOdd ? offsetX : 0),
-                  // 奇偶交替：偶数在上、奇数在下，形成高低高低的节奏
-                  top: 30 + (i.isOdd ? dy : 0),
-                  child: CharacterCard(
-                    name: controller.apps[i].name,
-                    backgroundColor: controller.apps[i].backgroundColor ?? Colors.white,
-                    imageAsset: controller.apps[i].imageAsset,
-                    textColor: controller.apps[i].textColor,
+    return Focus(
+      // 进入首页自动聚焦到卡片区，遥控器左右键在卡片间切换
+      autofocus: true,
+      onKeyEvent: _onKeyEvent,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          // 容器按卡片实际占位计算，改角度或尺寸无需手调
+          width: 30 + 3 * dx - offsetX + CharacterCard.width + 30,
+          height: 30 + dy + CharacterCard.height + 30,
+          child: Obx(
+            () => Stack(
+              children: [
+                for (var i = 0; i < controller.apps.length; i++)
+                  Positioned(
+                    // 低的卡左移，抵消斜切造成的缝隙变宽
+                    left: 30 + i * dx - (i.isOdd ? offsetX : 0),
+                    // 奇偶交替：偶数在上、奇数在下，形成高低高低的节奏
+                    top: 30 + (i.isOdd ? dy : 0),
+                    child: CharacterCard(
+                      name: controller.apps[i].name,
+                      backgroundColor: controller.apps[i].backgroundColor ?? Colors.white,
+                      imageAsset: controller.apps[i].imageAsset,
+                      logoAsset: controller.apps[i].logoAsset,
+                      textColor: controller.apps[i].textColor,
+                      // 当前焦点卡片高亮
+                      isFocused: controller.focusedIndex.value == i,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// 遥控器按键：左右切焦点，确认键暂留空
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowLeft:
+        controller.moveFocus(-1);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+        controller.moveFocus(1);
+        return KeyEventResult.handled;
+      default:
+        return KeyEventResult.ignored;
+    }
   }
 }

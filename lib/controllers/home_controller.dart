@@ -21,6 +21,9 @@ class HomeController extends GetxController {
   /// 桌面卡片对应的 App 列表，最多 4 个
   final apps = <AppInfo>[].obs;
 
+  /// 当前获得焦点的卡片索引，遥控器左右键切换
+  final focusedIndex = 0.obs;
+
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
   static const _maxApps = 4;
 
@@ -44,21 +47,24 @@ class HomeController extends GetxController {
         backgroundColor: Color(0xFFFF6182),
         imageAsset: 'https://w.wallhaven.cc/full/pk/wallhaven-pkq553.jpg',
       ),
-      // 飞牛：品牌蓝底色，文字白色
+      // 飞牛：品牌蓝底色 + 中心 logo，文字白色
       AppInfo(
         name: '飞牛Tv',
         backgroundColor: Color(0xFF2D78F9),
+        logoAsset: 'assets/images/feiniu_icon.png',
+        imageAsset: "https://w.wallhaven.cc/full/7j/wallhaven-7jxdo3.png",
         textColor: Colors.white,
       ),
       // PC：壁纸贴图
       AppInfo(
         name: 'PC',
-        imageAsset: 'https://w.wallhaven.cc/full/4x/wallhaven-4xgy3v.jpg',
+        textColor: Colors.black,
+        imageAsset: 'https://w.wallhaven.cc/full/yq/wallhaven-yqww8d.png',
       ),
       AppInfo(
         name: 'TV',
         textColor: Colors.white,
-        imageAsset: "https://w.wallhaven.cc/full/v9/wallhaven-v9o8vl.jpg",
+        imageAsset: "https://w.wallhaven.cc/full/k8/wallhaven-k8rre7.jpg",
       ),
     ]);
   }
@@ -67,6 +73,13 @@ class HomeController extends GetxController {
   void addApp(AppInfo app) {
     if (apps.length >= _maxApps) return;
     apps.add(app);
+  }
+
+  /// 遥控器左右移动焦点：到头循环到另一端，保持光标始终锁在卡片区
+  void moveFocus(int delta) {
+    final count = apps.length;
+    if (count == 0) return;
+    focusedIndex.value = (focusedIndex.value + delta + count) % count;
   }
 
   /// 调度到下一个整分钟再刷新，保证跳分时立即更新

@@ -8,7 +8,9 @@ class CharacterCard extends StatelessWidget {
     required this.name,
     this.backgroundColor = Colors.white,
     this.imageAsset,
+    this.logoAsset,
     this.textColor = Colors.white,
+    this.isFocused = false,
     this.child,
   });
 
@@ -28,8 +30,14 @@ class CharacterCard extends StatelessWidget {
   /// 卡面贴图，http(s) 开头走网络图，否则当作本地资源路径；为空则不显示
   final String? imageAsset;
 
+  /// 卡片中心区域等比显示的 logo，为空则不显示
+  final String? logoAsset;
+
   /// 卡面文字颜色，默认白
   final Color textColor;
+
+  /// 是否为遥控器焦点卡片，焦点态高亮描边
+  final bool isFocused;
 
   /// 卡片内容，暂为空，后续按需填充
   final Widget? child;
@@ -40,7 +48,7 @@ class CharacterCard extends StatelessWidget {
       width: width,
       height: height,
       child: CustomPaint(
-        painter: _CardPainter(color: backgroundColor),
+        painter: _CardPainter(color: backgroundColor, isFocused: isFocused),
         child: ClipPath(
           clipper: _CardClipper(),
           child: Stack(
@@ -49,13 +57,19 @@ class CharacterCard extends StatelessWidget {
               if (imageAsset != null)
                 Positioned.fill(
                   child: imageAsset!.startsWith('http')
-                      ? Image.network(
-                          imageAsset!,
-                          fit: BoxFit.cover,
-                          // 加载失败（如离线）时留空，露出底色卡面
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        )
+                      ? Image.network(imageAsset!, fit: BoxFit.cover)
                       : Image.asset(imageAsset!, fit: BoxFit.cover),
+                ),
+              // 中心 logo 等比显示，不裁切；斜切卡面左右中点仍在 width/2，直接居中即可
+              if (logoAsset != null)
+                Center(
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: logoAsset!.startsWith('http')
+                        ? Image.network(logoAsset!, fit: BoxFit.contain)
+                        : Image.asset(logoAsset!, fit: BoxFit.contain),
+                  ),
                 ),
               ?child,
               // 名称压在卡面右下角；右侧留出斜切量避免文字被裁
@@ -125,10 +139,13 @@ class _CardClipper extends CustomClipper<Path> {
 }
 
 class _CardPainter extends CustomPainter {
-  const _CardPainter({required this.color});
+  const _CardPainter({required this.color, required this.isFocused});
 
   /// 由 App 背景色决定卡面底色
   final Color color;
+
+  /// 焦点态
+  final bool isFocused;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,9 +158,38 @@ class _CardPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
     canvas.drawPath(path, Paint()..color = color);
+    // 焦点态：沿卡面轮廓由外向内叠三层发光，范围比单层描边更大更醒目
+    if (isFocused) {
+      // 外层大范围柔光
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 24
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+      );
+      // 中层光带
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.7)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+      // 内层清晰白边
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _CardPainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.color != color || oldDelegate.isFocused != isFocused;
 }

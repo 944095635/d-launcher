@@ -7,6 +7,7 @@ class AppInfo {
     this.packageName,
     this.backgroundColor,
     this.imageAsset,
+    this.logoAsset,
     this.textColor = Colors.white,
   });
 
@@ -21,6 +22,9 @@ class AppInfo {
 
   /// 卡面贴图：http(s) 开头的网络地址或本地资源路径，未指定时只显示纯色卡面
   final String? imageAsset;
+
+  /// 卡片中心区域显示的 logo，保持原始比例，未指定则不显示
+  final String? logoAsset;
 
   /// 卡片文字颜色，默认白，适配深色系卡面
   final Color textColor;
