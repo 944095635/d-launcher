@@ -10,8 +10,11 @@ import 'package:dlauncher/models/app_info.dart';
 import 'package:dlauncher/services/platform_service.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
-class HomeController extends GetxController {
+class HomeController extends GetxController with WidgetsBindingObserver {
   Timer? _timer;
+
+  /// 缓存上次显示的时间，只有分钟变化才写 obs，避免无关重建
+  String _lastTime = '';
 
   /// 时间，如 15:18
   final time = ''.obs;
@@ -33,12 +36,17 @@ class HomeController extends GetxController {
 
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
   static const _maxApps = 4;
+
+  /// 时钟检查间隔：30 秒足够，回前台会另行立即校正
+  static const _clockInterval = Duration(seconds: 30);
   static const _backgroundInterval = Duration(minutes: 30);
   static const _imageDir = 'assets/images/';
+
   /// 卡片贴图不参与背景轮换，避免背景与卡片撞图
   static const _cardImagePrefix = 'card_';
 
   Timer? _backgroundTimer;
+
   /// 背景候选图，供定时轮换与手动刷新共用
   List<String> _backgroundImages = const [];
   final _random = Random();
@@ -46,11 +54,20 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     _updateClock();
-    // 只显示到分钟，对齐到下一分钟边界刷新，避免无意义的每秒重建
-    _scheduleNextTick();
+    // 周期性检查而非单次对齐：App 退到后台时 Timer 会被冻结，
+    // 单次定时器错过触发点后回前台会一次性跳到当前时间；周期检查回前台即自动校正
+    // 间隔 30 秒即可，跳分最多延迟半分钟，换取更少的定时唤醒
+    _timer = Timer.periodic(_clockInterval, (_) => _updateClock());
     _initApps();
     _startBackgroundRotation();
+  }
+
+  /// 从后台回到前台立即校正，避免等下一次周期检查才刷新
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _updateClock();
   }
 
   /// 添加 App，超出上限则忽略，保证卡片不超过 4 张
@@ -84,27 +101,14 @@ class HomeController extends GetxController {
     await PlatformService.launchApp(packageName);
   }
 
-  /// 调度到下一个整分钟再刷新，保证跳分时立即更新
-  void _scheduleNextTick() {
-    final now = DateTime.now();
-    final nextMinute = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute + 1,
-    );
-    _timer = Timer(nextMinute.difference(now), () {
-      _updateClock();
-      _scheduleNextTick();
-    });
-  }
-
-  /// 读取当前时间并格式化，仅值变化时触发刷新
+  /// 读取当前时间并格式化，只有显示值变化时才写 obs，避免每次检查都无意义重建
   void _updateClock() {
     final now = DateTime.now();
-    time.value =
+    final nextTime =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    if (nextTime == _lastTime) return;
+    _lastTime = nextTime;
+    time.value = nextTime;
     date.value = '${now.year}年${now.month}月${now.day}日';
     weekday.value = _weekdays[now.weekday - 1];
   }
@@ -127,12 +131,12 @@ class HomeController extends GetxController {
   /// 新版 Flutter 不再生成 AssetManifest.json，必须用官方 API 读清单
   Future<List<String>> _loadBackgroundImages() async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-    return manifest.listAssets()
+    return manifest
+        .listAssets()
         .where((path) => path.startsWith(_imageDir))
         .where(
-          (path) => !path
-              .substring(_imageDir.length)
-              .startsWith(_cardImagePrefix),
+          (path) =>
+              !path.substring(_imageDir.length).startsWith(_cardImagePrefix),
         )
         .toList();
   }
@@ -154,6 +158,7 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _backgroundTimer?.cancel();
     super.onClose();

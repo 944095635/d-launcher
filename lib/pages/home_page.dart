@@ -62,9 +62,18 @@ class HomePage extends GetView<HomeController> {
                 child: Column(
                   crossAxisAlignment: .stretch,
                   children: [
+                    Text(
+                      "成都 21° 79",
+                      textAlign: .end,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        color: Color.fromARGB(255, 220, 220, 220),
+                        shadows: _textShadows,
+                      ),
+                    ),
                     Spacer(),
                     Expanded(
-                      flex: 2,
+                      flex: 3,
                       child: _buildCards(),
                     ),
                   ],
