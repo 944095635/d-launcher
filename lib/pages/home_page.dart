@@ -62,15 +62,18 @@ class HomePage extends GetView<HomeController> {
                 child: Column(
                   crossAxisAlignment: .stretch,
                   children: [
-                    Text(
-                      "成都 21° 79",
-                      textAlign: .end,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        color: Color.fromARGB(255, 220, 220, 220),
-                        shadows: _textShadows,
-                      ),
-                    ),
+                    // 天气启动时拉取一次，未返回前显示占位，避免文字区域塌陷
+                    Obx(() => Text(
+                          controller.weatherText.value.isEmpty
+                              ? '天气获取中…'
+                              : controller.weatherText.value,
+                          textAlign: .end,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Color.fromARGB(255, 220, 220, 220),
+                            shadows: _textShadows,
+                          ),
+                        )),
                     Spacer(),
                     Expanded(
                       flex: 3,

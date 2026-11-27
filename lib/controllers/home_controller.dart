@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/models/app_info.dart';
 import 'package:dlauncher/services/platform_service.dart';
+import 'package:dlauncher/services/weather_service.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController with WidgetsBindingObserver {
@@ -24,6 +25,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// 星期，如 星期五
   final weekday = ''.obs;
+
+  /// 天气摘要，如「成都 晴 最高17° AQI59」；启动拉取一次，失败保留占位文案
+  final weatherText = ''.obs;
 
   /// 桌面卡片对应的 App 列表，最多 4 个
   final apps = <AppInfo>[].obs;
@@ -62,6 +66,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     _timer = Timer.periodic(_clockInterval, (_) => _updateClock());
     _initApps();
     _startBackgroundRotation();
+    // 天气只在启动时拉一次，不随后台轮换或时钟刷新
+    _loadWeather();
+  }
+
+  /// 启动时拉取一次天气，失败则保留页面上的占位文字
+  Future<void> _loadWeather() async {
+    final info = await WeatherService.fetch();
+    if (info != null) weatherText.value = info.toString();
   }
 
   /// 从后台回到前台立即校正，避免等下一次周期检查才刷新
