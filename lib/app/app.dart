@@ -17,6 +17,8 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: .dark,
       darkTheme: ThemeData(
+        // 全局默认字体；时钟等显式指定 fontFamily 的文字不受影响
+        fontFamily: 'ZCOOLQingKeHuangYou',
         colorScheme: ColorScheme.dark(
           primary: Colors.white,
         ),

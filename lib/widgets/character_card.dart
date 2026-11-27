@@ -20,6 +20,9 @@ class CharacterCard extends StatelessWidget {
   /// 顶边相对底边的右移比例，决定斜切程度；外层布局按此补偿间隔
   static const skewRatio = 0.28;
 
+  /// 图片缓存超采系数：卡片经外层 FittedBox 放大显示，按逻辑尺寸解码会模糊
+  static const cacheOversample = 3.0;
+
   /// 右下角显示的 App 名称
   final String name;
 
@@ -43,6 +46,8 @@ class CharacterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 缓存尺寸 = 逻辑尺寸 × 设备像素比 × 超采系数，兼顾清晰度与解码开销
+    final cacheScale = MediaQuery.devicePixelRatioOf(context) * cacheOversample;
     // 焦点态平滑放大，配合光效强化选中反馈
     return AnimatedScale(
       scale: isFocused ? 1.06 : 1.0,
@@ -58,11 +63,20 @@ class CharacterCard extends StatelessWidget {
             child: Stack(
               children: [
                 // 贴图铺满卡面，由 ClipPath 裁成斜切形状；支持网络地址与本地资源
+                // 只按高度设缓存：cover 由高度撑满，宽度按比例推导且必然够覆盖，强行双设会破坏比例
                 if (imageAsset != null)
                   Positioned.fill(
                     child: imageAsset!.startsWith('http')
-                        ? Image.network(imageAsset!, fit: BoxFit.cover)
-                        : Image.asset(imageAsset!, fit: BoxFit.cover),
+                        ? Image.network(
+                            imageAsset!,
+                            fit: BoxFit.cover,
+                            cacheHeight: (height * cacheScale).round(),
+                          )
+                        : Image.asset(
+                            imageAsset!,
+                            fit: BoxFit.cover,
+                            cacheHeight: (height * cacheScale).round(),
+                          ),
                   ),
                 // 中心 logo 等比显示，不裁切；斜切卡面左右中点仍在 width/2，直接居中即可
                 if (logoAsset != null)
@@ -71,8 +85,16 @@ class CharacterCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       child: logoAsset!.startsWith('http')
-                          ? Image.network(logoAsset!, fit: BoxFit.contain)
-                          : Image.asset(logoAsset!, fit: BoxFit.contain),
+                          ? Image.network(
+                              logoAsset!,
+                              fit: BoxFit.contain,
+                              cacheWidth: (48 * cacheScale).round(),
+                            )
+                          : Image.asset(
+                              logoAsset!,
+                              fit: BoxFit.contain,
+                              cacheWidth: (48 * cacheScale).round(),
+                            ),
                     ),
                   ),
                 ?child,
@@ -82,9 +104,8 @@ class CharacterCard extends StatelessWidget {
                   bottom: 14,
                   child: Text(
                     name,
-                    // App 名用本地站酷庆科黄油体，与时钟的 Science Gothic 区分开
+                    // App 名走全局字体，仅按卡片底色指定文字颜色
                     style: TextStyle(
-                      fontFamily: 'ZCOOLQingKeHuangYou',
                       fontSize: 20,
                       color: textColor,
                     ),
