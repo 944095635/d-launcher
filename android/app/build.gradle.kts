@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.dlauncher"
+    namespace = "com.dm.dlauncher"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.dlauncher"
+        applicationId = "com.dm.dlauncher"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -27,6 +27,11 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // 电视是 armeabi-v7a（32 位 ARM），只保留该架构的原生库，避免打入无用 ABI 增大包体
+        ndk {
+            abiFilters += "armeabi-v7a"
+        }
     }
 
     buildTypes {
