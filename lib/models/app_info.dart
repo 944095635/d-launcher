@@ -5,6 +5,9 @@ class AppInfo {
   const AppInfo({
     required this.name,
     this.packageName,
+    this.launchAction,
+    this.launchComponent,
+    this.launchIntExtras,
     this.backgroundColor,
     this.imageAsset,
     this.logoAsset,
@@ -14,8 +17,17 @@ class AppInfo {
   /// 卡片上显示的名称，如「哔哩哔哩」
   final String name;
 
-  /// 应用包名，后续通过原生层拉起应用时使用
+  /// 应用包名，普通应用通过原生层按包名拉起
   final String? packageName;
+
+  /// 显式 Intent 的 action；配合 launchComponent 用于信号源切换等特殊入口
+  final String? launchAction;
+
+  /// 显式组件名（格式：包名/.Activity）；配置了就走组件直启，不再按包名拉起
+  final String? launchComponent;
+
+  /// 显式 Intent 携带的 int 参数，如 HDMI3 对应 input=25
+  final Map<String, int>? launchIntExtras;
 
   /// 卡片背景色，未指定时卡片用默认白色
   final Color? backgroundColor;

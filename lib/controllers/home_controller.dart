@@ -44,23 +44,28 @@ class HomeController extends GetxController {
       AppInfo(
         name: '哔哩哔哩',
         textColor: Color(0xFFFF6182),
-        packageName: 'tv.danmaku.bili',
+        packageName: 'com.xiaodianshi.tv.yst',
         backgroundColor: Color(0xFFFF6182),
         imageAsset: 'assets/images/wallhaven-pkq553.jpg',
       ),
       // 飞牛：品牌蓝底色 + 中心 logo，文字白色
       AppInfo(
         name: '飞牛Tv',
+        packageName: 'com.trim.tv',
         textColor: Color(0xFF2D78F9),
         backgroundColor: Color(0xFF2D78F9),
         logoAsset: 'assets/images/feiniu_icon.png',
         imageAsset: 'assets/images/wallhaven-9oekyx.jpg',
       ),
-      // PC：壁纸贴图
+      // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3
       AppInfo(
         name: 'PC',
+        packageName: 'com.xiaomi.mitv.tvplayer',
         textColor: Colors.black,
         imageAsset: 'assets/images/wallhaven-yqww8d.png',
+        launchAction: 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY',
+        launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
+        launchIntExtras: {'input': 25},
       ),
       AppInfo(
         name: 'TV',
@@ -83,9 +88,20 @@ class HomeController extends GetxController {
     focusedIndex.value = (focusedIndex.value + delta + count) % count;
   }
 
-  /// 确认键：拉起当前焦点卡片对应的应用；没配包名或原生失败时忽略
+  /// 确认键：拉起当前焦点卡片；配了组件走显式 Intent，否则按包名拉起
   Future<void> openFocusedApp() async {
-    final packageName = apps[focusedIndex.value].packageName;
+    if (apps.isEmpty) return;
+    final app = apps[focusedIndex.value];
+    final component = app.launchComponent;
+    if (component != null && component.isNotEmpty) {
+      await PlatformService.launchIntent(
+        action: app.launchAction,
+        component: component,
+        intExtras: app.launchIntExtras,
+      );
+      return;
+    }
+    final packageName = app.packageName;
     if (packageName == null || packageName.isEmpty) return;
     await PlatformService.launchApp(packageName);
   }

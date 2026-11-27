@@ -14,4 +14,18 @@ class PlatformService {
     final result = await invoke<bool>('launchApp', {'packageName': packageName});
     return result ?? false;
   }
+
+  /// 用显式 Intent 拉起组件（如切换 HDMI 信号源），返回原生是否成功发起
+  static Future<bool> launchIntent({
+    String? action,
+    required String component,
+    Map<String, int>? intExtras,
+  }) async {
+    final result = await invoke<bool>('launchIntent', {
+      'action': action,
+      'component': component,
+      'intExtras': intExtras,
+    });
+    return result ?? false;
+  }
 }
