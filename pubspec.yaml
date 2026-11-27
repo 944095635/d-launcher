@@ -52,6 +52,9 @@ dev_dependencies:
   # 代码规范检查
   flutter_lints: ^6.0.0
 
+  # 应用图标生成（配置见 flutter_launcher_icons.yaml）
+  flutter_launcher_icons: ^0.14.4
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
