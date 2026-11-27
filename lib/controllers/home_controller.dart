@@ -128,8 +128,10 @@ class HomeController extends GetxController {
         launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
         launchIntExtras: {'input': 25},
       ),
+      // 月光：Moonlight Android 版包名，主 Activity 带 LEANBACK_LAUNCHER，电视可直接拉起
       AppInfo(
         name: '月光',
+        packageName: 'com.limelight',
         textColor: Colors.grey,
         imageAsset: 'assets/images/card_4.jpg',
       ),

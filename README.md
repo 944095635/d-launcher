@@ -6,7 +6,25 @@
 - 架构：仅 `armeabi-v7a` （有需要可以自己修改 build.gradle.kts）
 - 当前包名：`com.ts.launcher`（原因见下方「桌面接管」）
 
+## 预览
+
+![DLauncher 桌面预览](preview/image.png)
+
 下文命令中的 `<TV_IP>` 为电视的 IP 地址，按实际替换（端口固定 `5555`）。
+
+## 连接电视
+
+通过局域网 ADB 连接电视，后续命令都靠这条连接执行：
+
+```bash
+# 连接电视（端口固定 5555）
+adb connect <TV_IP>:5555
+
+# 查看已连接设备，状态显示 device 才算连上
+adb devices
+```
+
+> 首次连接若提示 `unauthorized`，需在电视端弹出的授权框里点允许。若提示 `connection refused`，确认电视已开启 ADB 调试并和电脑在同一局域网。
 
 ## 构建与安装
 

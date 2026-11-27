@@ -67,12 +67,8 @@ flutter:
   assets:
     - assets/images/
 
-  # 本地字体
+  # 本地字体：电视端无法联网，字体随包发布
   fonts:
-    - family: ScienceGothic
-      fonts:
-        - asset: assets/fonts/ScienceGothic-Regular.ttf
-          weight: 400
     - family: ZCOOLQingKeHuangYou
       fonts:
         - asset: assets/fonts/ZCOOLQingKeHuangYou-Regular.ttf

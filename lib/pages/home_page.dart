@@ -67,8 +67,8 @@ class HomePage extends GetView<HomeController> {
   /// 左侧时钟：按内容自适应后整体等比缩放到可用空间，避免溢出
   Widget _buildClock() {
     return FittedBox(
-      fit: BoxFit.contain,
-      alignment: Alignment.topLeft,
+      fit: BoxFit.none,
+      alignment: Alignment.topCenter,
       // 不设固定尺寸，Column 按内容布局；FittedBox 拿到真实尺寸再统一缩放
       child: Obx(
         () => Column(
@@ -78,37 +78,32 @@ class HomePage extends GetView<HomeController> {
             // 背景图为深色，时间用浅色文字保证可读，压到单行不换行
             Text(
               controller.time.value,
-              // 时间使用本地 Science Gothic 字体
+              // 字体继承全局 ZCOOL，只有 Regular 一种字重，不再指定 w300
               style: const TextStyle(
-                fontFamily: 'ScienceGothic',
-                fontSize: 200,
-                fontWeight: FontWeight.w300,
+                fontSize: 120,
                 // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
             // 日期与星期整体右缩进，避免与时间左端齐平显得突出
             Padding(
-              padding: const EdgeInsets.only(left: 24),
+              padding: const EdgeInsets.only(left: 12),
               child: Column(
                 mainAxisSize: .min,
                 crossAxisAlignment: .start,
-                spacing: 8,
                 children: [
                   Text(
                     controller.date.value,
                     // 日期与星期沿用时间的字体，保持视觉统一
                     style: const TextStyle(
-                      fontFamily: 'ScienceGothic',
-                      fontSize: 40,
+                      fontSize: 20,
                       color: Colors.white70,
                     ),
                   ),
                   Text(
                     controller.weekday.value,
                     style: const TextStyle(
-                      fontFamily: 'ScienceGothic',
-                      fontSize: 40,
+                      fontSize: 20,
                       color: Colors.white70,
                     ),
                   ),
