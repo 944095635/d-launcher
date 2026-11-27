@@ -8,7 +8,7 @@
 
 ## 预览
 
-![DLauncher 桌面预览](preview/image.png)
+![DLauncher 桌面预览](preview/image.jpg)
 
 下文命令中的 `<TV_IP>` 为电视的 IP 地址，按实际替换（端口固定 `5555`）。
 
