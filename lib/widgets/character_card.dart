@@ -44,50 +44,56 @@ class CharacterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: CustomPaint(
-        painter: _CardPainter(color: backgroundColor, isFocused: isFocused),
-        child: ClipPath(
-          clipper: _CardClipper(),
-          child: Stack(
-            children: [
-              // 贴图铺满卡面，由 ClipPath 裁成斜切形状；支持网络地址与本地资源
-              if (imageAsset != null)
-                Positioned.fill(
-                  child: imageAsset!.startsWith('http')
-                      ? Image.network(imageAsset!, fit: BoxFit.cover)
-                      : Image.asset(imageAsset!, fit: BoxFit.cover),
-                ),
-              // 中心 logo 等比显示，不裁切；斜切卡面左右中点仍在 width/2，直接居中即可
-              if (logoAsset != null)
-                Center(
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: logoAsset!.startsWith('http')
-                        ? Image.network(logoAsset!, fit: BoxFit.contain)
-                        : Image.asset(logoAsset!, fit: BoxFit.contain),
+    // 焦点态平滑放大，配合光效强化选中反馈
+    return AnimatedScale(
+      scale: isFocused ? 1.06 : 1.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: CustomPaint(
+          painter: _CardPainter(color: backgroundColor, isFocused: isFocused),
+          child: ClipPath(
+            clipper: _CardClipper(),
+            child: Stack(
+              children: [
+                // 贴图铺满卡面，由 ClipPath 裁成斜切形状；支持网络地址与本地资源
+                if (imageAsset != null)
+                  Positioned.fill(
+                    child: imageAsset!.startsWith('http')
+                        ? Image.network(imageAsset!, fit: BoxFit.cover)
+                        : Image.asset(imageAsset!, fit: BoxFit.cover),
                   ),
-                ),
-              ?child,
-              // 名称压在卡面右下角；右侧留出斜切量避免文字被裁
-              Positioned(
-                right: width * skewRatio + 12,
-                bottom: 14,
-                child: Text(
-                  name,
-                  // App 名用站酷庆科黄油体，与时钟的 Science Gothic 区分开
-                  style: GoogleFonts.zcoolQingKeHuangYou(
-                    textStyle: TextStyle(
-                      fontSize: 20,
-                      color: textColor,
+                // 中心 logo 等比显示，不裁切；斜切卡面左右中点仍在 width/2，直接居中即可
+                if (logoAsset != null)
+                  Center(
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: logoAsset!.startsWith('http')
+                          ? Image.network(logoAsset!, fit: BoxFit.contain)
+                          : Image.asset(logoAsset!, fit: BoxFit.contain),
+                    ),
+                  ),
+                ?child,
+                // 名称压在卡面右下角；右侧留出斜切量避免文字被裁
+                Positioned(
+                  right: width * skewRatio + 12,
+                  bottom: 14,
+                  child: Text(
+                    name,
+                    // App 名用站酷庆科黄油体，与时钟的 Science Gothic 区分开
+                    style: GoogleFonts.zcoolQingKeHuangYou(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: textColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

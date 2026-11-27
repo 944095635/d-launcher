@@ -50,10 +50,10 @@ class HomeController extends GetxController {
       // 飞牛：品牌蓝底色 + 中心 logo，文字白色
       AppInfo(
         name: '飞牛Tv',
+        textColor: Color(0xFF2D78F9),
         backgroundColor: Color(0xFF2D78F9),
         logoAsset: 'assets/images/feiniu_icon.png',
-        imageAsset: "https://w.wallhaven.cc/full/7j/wallhaven-7jxdo3.png",
-        textColor: Colors.white,
+        imageAsset: "https://w.wallhaven.cc/full/9o/wallhaven-9oekyx.jpg",
       ),
       // PC：壁纸贴图
       AppInfo(
