@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// 首页状态：实时时钟。
+import '../models/app_info.dart';
+
+/// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController {
   Timer? _timer;
 
@@ -15,7 +18,11 @@ class HomeController extends GetxController {
   /// 星期，如 星期五
   final weekday = ''.obs;
 
+  /// 桌面卡片对应的 App 列表，最多 4 个
+  final apps = <AppInfo>[].obs;
+
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+  static const _maxApps = 4;
 
   @override
   void onInit() {
@@ -23,12 +30,55 @@ class HomeController extends GetxController {
     _updateClock();
     // 只显示到分钟，对齐到下一分钟边界刷新，避免无意义的每秒重建
     _scheduleNextTick();
+    _initApps();
+  }
+
+  /// 初始化桌面 App；后续从原生层读取安装列表时替换这里
+  void _initApps() {
+    apps.addAll(const [
+      // 哔哩哔哩：品牌色 #FF6182 做底色，配一张壁纸贴图
+      AppInfo(
+        name: '哔哩哔哩',
+        textColor: Color(0xFFFF6182),
+        packageName: 'tv.danmaku.bili',
+        backgroundColor: Color(0xFFFF6182),
+        imageAsset: 'https://w.wallhaven.cc/full/pk/wallhaven-pkq553.jpg',
+      ),
+      // 飞牛：品牌蓝底色，文字白色
+      AppInfo(
+        name: '飞牛Tv',
+        backgroundColor: Color(0xFF2D78F9),
+        textColor: Colors.white,
+      ),
+      // PC：壁纸贴图
+      AppInfo(
+        name: 'PC',
+        imageAsset: 'https://w.wallhaven.cc/full/4x/wallhaven-4xgy3v.jpg',
+      ),
+      AppInfo(
+        name: 'TV',
+        textColor: Colors.white,
+        imageAsset: "https://w.wallhaven.cc/full/v9/wallhaven-v9o8vl.jpg",
+      ),
+    ]);
+  }
+
+  /// 添加 App，超出上限则忽略，保证卡片不超过 4 张
+  void addApp(AppInfo app) {
+    if (apps.length >= _maxApps) return;
+    apps.add(app);
   }
 
   /// 调度到下一个整分钟再刷新，保证跳分时立即更新
   void _scheduleNextTick() {
     final now = DateTime.now();
-    final nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute + 1,
+    );
     _timer = Timer(nextMinute.difference(now), () {
       _updateClock();
       _scheduleNextTick();
