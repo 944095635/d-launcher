@@ -1,4 +1,4 @@
-package com.dm.dlauncher
+package com.ts.launcher
 
 import android.content.ComponentName
 import android.content.Intent

@@ -5,7 +5,8 @@ plugins {
 }
 
 android {
-    namespace = "com.dm.dlauncher"
+    // 与小米桌面白名单包名一致，系统才会认可本应用接管 HOME
+    namespace = "com.ts.launcher"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +17,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.dm.dlauncher"
+        applicationId = "com.ts.launcher"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
