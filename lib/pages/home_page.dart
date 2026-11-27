@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../controllers/home_controller.dart';
@@ -73,12 +72,13 @@ class HomePage extends GetView<HomeController> {
             // 背景图为深色，时间用浅色文字保证可读，压到单行不换行
             Text(
               controller.time.value,
-              // 时间套用 Science Gothic 字体，其余样式沿用原设置
-              style: GoogleFonts.scienceGothic(
-                textStyle: const TextStyle(
-                  fontSize: 200,
-                  fontWeight: FontWeight.w300,
-                ),
+              // 时间套用本地 Science Gothic 字体，其余样式沿用原设置
+              style: const TextStyle(
+                fontFamily: 'ScienceGothic',
+                fontSize: 200,
+                fontWeight: FontWeight.w300,
+                // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
             // 日期与星期整体右缩进，避免与时间左端齐平显得突出
@@ -92,20 +92,18 @@ class HomePage extends GetView<HomeController> {
                   Text(
                     controller.date.value,
                     // 日期与星期沿用时间的字体，保持视觉统一
-                    style: GoogleFonts.scienceGothic(
-                      textStyle: const TextStyle(
-                        fontSize: 40,
-                        color: Colors.white70,
-                      ),
+                    style: const TextStyle(
+                      fontFamily: 'ScienceGothic',
+                      fontSize: 40,
+                      color: Colors.white70,
                     ),
                   ),
                   Text(
                     controller.weekday.value,
-                    style: GoogleFonts.scienceGothic(
-                      textStyle: const TextStyle(
-                        fontSize: 40,
-                        color: Colors.white70,
-                      ),
+                    style: const TextStyle(
+                      fontFamily: 'ScienceGothic',
+                      fontSize: 40,
+                      color: Colors.white70,
                     ),
                   ),
                 ],

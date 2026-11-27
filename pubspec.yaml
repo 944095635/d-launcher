@@ -35,7 +35,6 @@ dependencies:
   # UI 组件与图标
   material_ui: ^1.11.1
   cupertino_icons: ^2.0.0
-  google_fonts: ^9.0.0
 
   # 状态管理 / 路由 / 依赖注入
   get:
@@ -67,6 +66,18 @@ flutter:
   # 应用资源
   assets:
     - assets/images/
+
+  # 本地字体：电视端无法联网，字体全部随包发布
+  fonts:
+    - family: ScienceGothic
+      fonts:
+        - asset: assets/fonts/ScienceGothic-Light.ttf
+          weight: 300
+        - asset: assets/fonts/ScienceGothic-Regular.ttf
+          weight: 400
+    - family: ZCOOLQingKeHuangYou
+      fonts:
+        - asset: assets/fonts/ZCOOLQingKeHuangYou-Regular.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

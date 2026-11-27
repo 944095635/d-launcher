@@ -1,4 +1,3 @@
-import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// 单张应用卡片：带圆角的斜切卡面，右下角显示 App 名称。
@@ -83,12 +82,11 @@ class CharacterCard extends StatelessWidget {
                   bottom: 14,
                   child: Text(
                     name,
-                    // App 名用站酷庆科黄油体，与时钟的 Science Gothic 区分开
-                    style: GoogleFonts.zcoolQingKeHuangYou(
-                      textStyle: TextStyle(
-                        fontSize: 20,
-                        color: textColor,
-                      ),
+                    // App 名用本地站酷庆科黄油体，与时钟的 Science Gothic 区分开
+                    style: TextStyle(
+                      fontFamily: 'ZCOOLQingKeHuangYou',
+                      fontSize: 20,
+                      color: textColor,
                     ),
                   ),
                 ),
@@ -172,7 +170,7 @@ class _CardPainter extends CustomPainter {
         Paint()
           ..color = Colors.white.withValues(alpha: 0.35)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 24
+          ..strokeWidth = 12
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
       );
       // 中层光带
@@ -181,7 +179,7 @@ class _CardPainter extends CustomPainter {
         Paint()
           ..color = Colors.white.withValues(alpha: 0.7)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 12
+          ..strokeWidth = 6
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
       );
       // 内层清晰白边
@@ -190,7 +188,7 @@ class _CardPainter extends CustomPainter {
         Paint()
           ..color = Colors.white
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 4,
+          ..strokeWidth = 2,
       );
     }
   }
