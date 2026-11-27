@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../controllers/home_controller.dart';
-import '../widgets/character_card.dart';
+import 'package:dlauncher/controllers/home_controller.dart';
+import 'package:dlauncher/widgets/character_card.dart';
 
 /// 桌面首页。
 class HomePage extends GetView<HomeController> {
@@ -21,40 +21,46 @@ class HomePage extends GetView<HomeController> {
 
   /// 页面主体：背景图铺满，内容为左右布局
   Widget _buildBody() {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          // image: NetworkImage(
-          //   "https://w.wallhaven.cc/full/qr/wallhaven-qr5vmq.jpg",
-          // ),
-          image: AssetImage('assets/images/home_background.png'),
-          fit: BoxFit.cover,
-          // colorFilter: ColorFilter.mode(Colors.white, BlendMode.color),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/home_background.png',
+            fit: BoxFit.cover,
+            cacheWidth: 600,
+            // 备用网络背景：image: NetworkImage("https://w.wallhaven.cc/full/qr/wallhaven-qr5vmq.jpg")
+            // colorFilter: ColorFilter.mode(Colors.white, BlendMode.color),
+          ),
         ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-      child: Row(
-        // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
-        spacing: 40,
-        crossAxisAlignment: .stretch,
-        children: [
-          // 左侧时钟占四成，右侧卡片占六成
-          Expanded(flex: 4, child: _buildClock()),
-          Expanded(
-            flex: 6,
-            child: Column(
+        // 内容层同样铺满，给 Row 的 Expanded 与 stretch 提供紧约束
+        Positioned.fill(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            child: Row(
+              // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
+              spacing: 40,
               crossAxisAlignment: .stretch,
               children: [
-                Spacer(),
+                // 左侧时钟占四成，右侧卡片占六成
+                Expanded(flex: 4, child: _buildClock()),
                 Expanded(
-                  flex: 2,
-                  child: _buildCards(),
+                  flex: 6,
+                  child: Column(
+                    crossAxisAlignment: .stretch,
+                    children: [
+                      Spacer(),
+                      Expanded(
+                        flex: 2,
+                        child: _buildCards(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -150,7 +156,6 @@ class HomePage extends GetView<HomeController> {
                       backgroundColor:
                           controller.apps[i].backgroundColor ?? Colors.white,
                       imageAsset: controller.apps[i].imageAsset,
-                      logoAsset: controller.apps[i].logoAsset,
                       textColor: controller.apps[i].textColor,
                       // 当前焦点卡片高亮
                       isFocused: controller.focusedIndex.value == i,

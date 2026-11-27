@@ -7,7 +7,6 @@ class CharacterCard extends StatelessWidget {
     required this.name,
     this.backgroundColor = Colors.white,
     this.imageAsset,
-    this.logoAsset,
     this.textColor = Colors.white,
     this.isFocused = false,
     this.child,
@@ -31,9 +30,6 @@ class CharacterCard extends StatelessWidget {
 
   /// 卡面贴图，http(s) 开头走网络图，否则当作本地资源路径；为空则不显示
   final String? imageAsset;
-
-  /// 卡片中心区域等比显示的 logo，为空则不显示
-  final String? logoAsset;
 
   /// 卡面文字颜色，默认白
   final Color textColor;
@@ -77,25 +73,6 @@ class CharacterCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             cacheHeight: (height * cacheScale).round(),
                           ),
-                  ),
-                // 中心 logo 等比显示，不裁切；斜切卡面左右中点仍在 width/2，直接居中即可
-                if (logoAsset != null)
-                  Center(
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: logoAsset!.startsWith('http')
-                          ? Image.network(
-                              logoAsset!,
-                              fit: BoxFit.contain,
-                              cacheWidth: (48 * cacheScale).round(),
-                            )
-                          : Image.asset(
-                              logoAsset!,
-                              fit: BoxFit.contain,
-                              cacheWidth: (48 * cacheScale).round(),
-                            ),
-                    ),
                   ),
                 ?child,
                 // 名称压在卡面右下角；右侧留出斜切量避免文字被裁

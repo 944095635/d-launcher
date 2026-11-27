@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../models/app_info.dart';
-import '../services/platform_service.dart';
+import 'package:dlauncher/models/app_info.dart';
+import 'package:dlauncher/services/platform_service.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController {
@@ -110,13 +110,12 @@ class HomeController extends GetxController {
         backgroundColor: Color(0xFFFF6182),
         imageAsset: 'assets/images/card_1.jpg',
       ),
-      // 飞牛：品牌蓝底色 + 中心 logo，文字白色
+      // 飞牛：品牌蓝底色 + 品牌蓝文字，配一张本地插画贴图
       AppInfo(
         name: '飞牛',
         packageName: 'com.trim.tv',
         textColor: Color(0xFF2D78F9),
         backgroundColor: Color(0xFF2D78F9),
-        logoAsset: 'assets/images/feiniu_icon.png',
         imageAsset: 'assets/images/card_2.jpg',
       ),
       // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3

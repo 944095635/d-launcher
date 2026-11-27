@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 
-import '../controllers/home_controller.dart';
-import '../pages/home_page.dart';
-import '../pages/splash_page.dart';
+import 'package:dlauncher/controllers/home_controller.dart';
+import 'package:dlauncher/pages/home_page.dart';
+import 'package:dlauncher/pages/splash_page.dart';
 
 /// 首页依赖绑定：控制器随路由注册，生命周期由 GetX 管理。
 class HomeBinding extends Binding {

@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../app/routes.dart';
-import '../services/launch_service.dart';
+import 'package:dlauncher/app/routes.dart';
+import 'package:dlauncher/services/launch_service.dart';
 
 /// 启动屏幕：仅首次启动展示，短暂展示后进入首页。
 class SplashPage extends StatefulWidget {
