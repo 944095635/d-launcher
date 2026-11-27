@@ -16,8 +16,11 @@ class App extends StatelessWidget {
       title: 'DLauncher',
       debugShowCheckedModeBanner: false,
       themeMode: .dark,
-      theme: ThemeData(
-        colorScheme: ColorScheme.dark(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.dark(
+          primary: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.black,
       ),
       initialRoute: initialRoute,
       getPages: AppRoutes.pages,
