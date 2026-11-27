@@ -45,7 +45,7 @@ class HomeController extends GetxController {
         textColor: Color(0xFFFF6182),
         packageName: 'tv.danmaku.bili',
         backgroundColor: Color(0xFFFF6182),
-        imageAsset: 'https://w.wallhaven.cc/full/pk/wallhaven-pkq553.jpg',
+        imageAsset: 'assets/images/wallhaven-pkq553.jpg',
       ),
       // 飞牛：品牌蓝底色 + 中心 logo，文字白色
       AppInfo(
@@ -53,18 +53,18 @@ class HomeController extends GetxController {
         textColor: Color(0xFF2D78F9),
         backgroundColor: Color(0xFF2D78F9),
         logoAsset: 'assets/images/feiniu_icon.png',
-        imageAsset: "https://w.wallhaven.cc/full/9o/wallhaven-9oekyx.jpg",
+        imageAsset: 'assets/images/wallhaven-9oekyx.jpg',
       ),
       // PC：壁纸贴图
       AppInfo(
         name: 'PC',
         textColor: Colors.black,
-        imageAsset: 'https://w.wallhaven.cc/full/yq/wallhaven-yqww8d.png',
+        imageAsset: 'assets/images/wallhaven-yqww8d.png',
       ),
       AppInfo(
         name: 'TV',
         textColor: Colors.white,
-        imageAsset: "https://w.wallhaven.cc/full/k8/wallhaven-k8rre7.jpg",
+        imageAsset: 'assets/images/wallhaven-rqwwvj.jpg',
       ),
     ]);
   }

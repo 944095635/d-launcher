@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/services.dart';
+
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,6 +25,9 @@ class HomePage extends GetView<HomeController> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
+          // image: NetworkImage(
+          //   "https://w.wallhaven.cc/full/qr/wallhaven-qr5vmq.jpg",
+          // ),
           image: AssetImage('assets/images/home_background.png'),
           fit: BoxFit.cover,
           // colorFilter: ColorFilter.mode(Colors.white, BlendMode.color),
@@ -145,7 +149,8 @@ class HomePage extends GetView<HomeController> {
                     top: 30 + (i.isOdd ? dy : 0),
                     child: CharacterCard(
                       name: controller.apps[i].name,
-                      backgroundColor: controller.apps[i].backgroundColor ?? Colors.white,
+                      backgroundColor:
+                          controller.apps[i].backgroundColor ?? Colors.white,
                       imageAsset: controller.apps[i].imageAsset,
                       logoAsset: controller.apps[i].logoAsset,
                       textColor: controller.apps[i].textColor,
