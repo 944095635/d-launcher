@@ -35,9 +35,12 @@ adb -s 192.168.1.107:5555 shell cmd package set-home-activity com.ts.launcher/.M
 
 # 5. 禁用小米桌面（必须在第 4 步之后）
 adb -s 192.168.1.107:5555 shell pm disable-user --user 0 com.mitv.tvhome
+
+# 6. 撤销操作：卸载本 App（不想用 DLauncher 时执行）
+adb -s 192.168.1.107:5555 shell pm uninstall com.ts.launcher
 ```
 
-> 第 5 步必须用包级禁用；组件级写法会报 `SecurityException`。禁用后若桌面异常，用文末命令回滚。
+> 第 5 步必须用包级禁用；组件级写法会报 `SecurityException`。第 6 步是**撤销操作**：卸载本 App（`com.ts.launcher`），只移除 DLauncher，不动系统预装的小米桌面；执行后按文末命令把默认桌面设回小米桌面即可。
 
 ## 验证
 
@@ -52,9 +55,11 @@ adb -s 192.168.1.107:5555 shell dumpsys window | findstr mCurrentFocus
 ## 恢复小米桌面
 
 ```bash
+# 第 5 步禁用了小米桌面：重新启用
 adb -s 192.168.1.107:5555 shell pm enable com.mitv.tvhome
+
 adb -s 192.168.1.107:5555 shell cmd package set-home-activity com.mitv.tvhome/.MainActivityUserMode
 adb -s 192.168.1.107:5555 shell reboot
 ```
 
-> 不要禁用 `com.xiaomi.mitv.settings/.entry.FallbackHome`，那是开机兜底桌面。
+> 第 6 步只是卸载本 App（撤销操作），小米桌面还在，卸载后按上面命令设回默认桌面即可恢复。不要禁用 `com.xiaomi.mitv.settings/.entry.FallbackHome`，那是开机兜底桌面。
