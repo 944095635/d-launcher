@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 import 'package:dlauncher/app/route_names.dart';
 import 'package:dlauncher/pages/home/home_controller.dart';
 import 'package:dlauncher/pages/home/home_page.dart';
-import 'package:dlauncher/pages/settings/background_settings_page.dart';
-import 'package:dlauncher/pages/settings/settings_controller.dart';
+import 'package:dlauncher/pages/settings/apps/settings_controller.dart';
+import 'package:dlauncher/pages/settings/apps/settings_page.dart';
+import 'package:dlauncher/pages/settings/background/background_settings_page.dart';
 import 'package:dlauncher/pages/settings/settings_menu_page.dart';
-import 'package:dlauncher/pages/settings/settings_page.dart';
 
 /// 首页依赖绑定：控制器随路由注册，生命周期由 GetX 管理。
 class HomeBinding extends Binding {

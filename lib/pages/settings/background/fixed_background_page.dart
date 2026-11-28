@@ -2,8 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/pages/settings/local_image_picker_page.dart';
-import 'package:dlauncher/pages/settings/text_input_dialog.dart';
+import 'package:dlauncher/pages/settings/background/local_image_picker_page.dart';
+import 'package:dlauncher/pages/settings/common/text_input_dialog.dart';
 import 'package:dlauncher/services/background_service.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/models/installed_app.dart';
-import 'package:dlauncher/pages/settings/settings_controller.dart';
+import 'package:dlauncher/pages/settings/apps/settings_controller.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 包名点选页：列出可拉起的应用，遥控器上下选择、确认键回填。

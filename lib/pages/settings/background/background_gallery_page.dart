@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/pages/settings/text_input_dialog.dart';
+import 'package:dlauncher/pages/settings/common/text_input_dialog.dart';
 import 'package:dlauncher/services/background_service.dart';
 
 /// 固定背景选择页：PageView 左右翻看背景图，第一项为「不使用背景」。

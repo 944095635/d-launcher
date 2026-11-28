@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/pages/settings/background_gallery_page.dart';
+import 'package:dlauncher/pages/settings/background/background_gallery_page.dart';
 import 'package:dlauncher/services/background_service.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 

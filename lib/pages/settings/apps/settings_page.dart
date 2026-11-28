@@ -2,8 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/pages/settings/card_edit_page.dart';
-import 'package:dlauncher/pages/settings/settings_controller.dart';
+import 'package:dlauncher/pages/settings/apps/card_edit_page.dart';
+import 'package:dlauncher/pages/settings/apps/settings_controller.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 桌面设置页：遥控器上下选卡片，确认键进编辑页（可改可删），配置即时保存。

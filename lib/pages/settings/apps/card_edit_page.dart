@@ -5,10 +5,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/models/app_info.dart';
 import 'package:dlauncher/models/installed_app.dart';
-import 'package:dlauncher/pages/settings/app_picker_page.dart';
-import 'package:dlauncher/pages/settings/card_gallery_page.dart';
-import 'package:dlauncher/pages/settings/settings_controller.dart';
-import 'package:dlauncher/pages/settings/text_input_dialog.dart';
+import 'package:dlauncher/pages/settings/apps/app_picker_page.dart';
+import 'package:dlauncher/pages/settings/apps/card_gallery_page.dart';
+import 'package:dlauncher/pages/settings/apps/settings_controller.dart';
+import 'package:dlauncher/pages/settings/common/text_input_dialog.dart';
 import 'package:dlauncher/widgets/character_card.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
