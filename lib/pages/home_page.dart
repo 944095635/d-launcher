@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/controllers/home_controller.dart';
+import 'package:dlauncher/pages/home_controller.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/widgets/character_card.dart';
 
@@ -60,11 +60,11 @@ class HomePage extends GetView<HomeController> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
           child: Row(
             // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
-            spacing: 40,
+            spacing: 30,
             crossAxisAlignment: .stretch,
             children: [
               // 左侧时钟占四成，右侧卡片占六成
-              Expanded(flex: 2, child: _buildClock()),
+              Expanded(flex: 3, child: _buildClock()),
               Expanded(
                 flex: 5,
                 child: Column(
@@ -101,7 +101,7 @@ class HomePage extends GetView<HomeController> {
   Widget _buildClock() {
     return FittedBox(
       fit: BoxFit.none,
-      alignment: Alignment.topCenter,
+      alignment: Alignment.topLeft,
       // 不设固定尺寸，Column 按内容布局；FittedBox 拿到真实尺寸再统一缩放
       child: Obx(
         () => Column(
