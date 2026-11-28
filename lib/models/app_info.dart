@@ -24,18 +24,22 @@ enum AppType {
   static const hdmiComponent = 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity';
 }
 
-/// 卡面底部蒙版颜色：只支持黑白两色，垫在名称下提升文字可读性。
+/// 卡面底部蒙版：黑、白两色或完全不用，垫在名称下提升文字可读性。
 enum CardMaskColor {
   black(label: '黑色', color: Colors.black),
-  white(label: '白色', color: Colors.white);
+  white(label: '白色', color: Colors.white),
+  none(label: '不使用', color: Colors.transparent);
 
   const CardMaskColor({required this.label, required this.color});
 
   /// 编辑页显示的名字
   final String label;
 
-  /// 渐变蒙版实际使用的颜色
+  /// 渐变蒙版实际使用的颜色；none 用透明色，绘制处会整段跳过
   final Color color;
+
+  /// 是否绘制底部渐变蒙版与选中光效
+  bool get hasMask => this != none;
 }
 
 /// 桌面 App 信息：卡片展示与后续拉起应用的数据载体。
@@ -76,7 +80,7 @@ class AppInfo {
   /// 卡片文字颜色，默认白，适配深色系卡面
   final Color textColor;
 
-  /// 卡面底部渐变蒙版颜色，默认黑；与 textColor 搭配使用（白字配黑蒙版）
+  /// 卡面底部渐变蒙版，默认黑；none 时不画蒙版与选中光效，仅保留放大
   final CardMaskColor maskColor;
 
   /// 由底层启动参数反推类型，兼容旧配置：配了显式组件就是信号源，按 input 值区分

@@ -64,6 +64,7 @@ class CharacterCard extends StatelessWidget {
             color: backgroundColor,
             isFocused: isFocused,
             hasImage: imageAsset != null,
+            showGlow: maskColor.hasMask,
           ),
           child: ClipPath(
             clipper: _CardClipper(),
@@ -83,22 +84,23 @@ class CharacterCard extends StatelessWidget {
                   ),
                 ?child,
                 // 底部渐变蒙版：由底部实色向上渐隐到全透明，垫在名称下提升可读性。
-                // 颜色由卡片配置决定（黑/白），需配合同色系的文字颜色才有对比
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          maskColor.color,
-                          Colors.transparent,
-                        ],
-                        stops: [0, .8],
+                // 「不使用」时整段跳过，卡面保持贴图或底色的原样
+                if (maskColor.hasMask)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            maskColor.color,
+                            Colors.transparent,
+                          ],
+                          stops: [0, .8],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 // 名称压在卡面右下角；右侧留出斜切量避免文字被裁
                 Positioned(
                   right: width * skewRatio + 12,
@@ -169,6 +171,7 @@ class _CardPainter extends CustomPainter {
     required this.color,
     required this.isFocused,
     required this.hasImage,
+    required this.showGlow,
   });
 
   /// 由 App 背景色决定卡面底色
@@ -179,6 +182,9 @@ class _CardPainter extends CustomPainter {
 
   /// 有贴图时贴图铺满卡面，底色被完全遮住，跳过绘制
   final bool hasImage;
+
+  /// 焦点态是否画描边光效；不用蒙版时只留放大，不画光效
+  final bool showGlow;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -194,8 +200,8 @@ class _CardPainter extends CustomPainter {
     if (!hasImage) {
       canvas.drawPath(path, Paint()..color = color);
     }
-    // 焦点态：沿卡面轮廓由外向内叠三层发光，范围比单层描边更大更醒目
-    if (isFocused) {
+    // 焦点态光效：不用蒙版时跳过，只保留外层 AnimatedScale 的放大反馈
+    if (isFocused && showGlow) {
       // 外层大范围柔光
       canvas.drawPath(
         path,
@@ -229,5 +235,6 @@ class _CardPainter extends CustomPainter {
   bool shouldRepaint(covariant _CardPainter oldDelegate) =>
       oldDelegate.color != color ||
       oldDelegate.isFocused != isFocused ||
-      oldDelegate.hasImage != hasImage;
+      oldDelegate.hasImage != hasImage ||
+      oldDelegate.showGlow != showGlow;
 }

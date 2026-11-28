@@ -343,13 +343,11 @@ class _CardEditPageState extends State<CardEditPage> {
     _app = text ? _copyWith(textColor: color) : _copyWith(backgroundColor: color);
   }
 
-  /// 蒙版颜色只有黑白两值，确认键直接取反
+  /// 蒙版在黑/白/不使用之间循环，确认键切到下一档
   void _cycleMaskColor() {
-    _app = _copyWith(
-      maskColor: _app.maskColor == CardMaskColor.black
-          ? CardMaskColor.white
-          : CardMaskColor.black,
-    );
+    final next = CardMaskColor.values[
+        (_app.maskColor.index + 1) % CardMaskColor.values.length];
+    _app = _copyWith(maskColor: next);
   }
 
   /// 基于当前值生成新 AppInfo，只覆盖传入字段。
