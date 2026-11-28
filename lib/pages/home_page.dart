@@ -20,8 +20,16 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildBody(),
+    // 桌面是根页面，系统返回键不能退出：一旦 finish，作为 HOME 会被系统重新拉起，表现为整页重启。
+    // 返回键改在这里换背景，不依赖卡片区的键盘焦点，焦点丢失时也能响应。
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) controller.refreshBackground();
+      },
+      child: Scaffold(
+        body: _buildBody(),
+      ),
     );
   }
 
@@ -56,7 +64,7 @@ class HomePage extends GetView<HomeController> {
             crossAxisAlignment: .stretch,
             children: [
               // 左侧时钟占四成，右侧卡片占六成
-              Expanded(flex: 3, child: _buildClock()),
+              Expanded(flex: 2, child: _buildClock()),
               Expanded(
                 flex: 5,
                 child: Column(
@@ -211,11 +219,7 @@ class HomePage extends GetView<HomeController> {
       case LogicalKeyboardKey.enter:
         if (event is KeyDownEvent) controller.openFocusedApp();
         return KeyEventResult.handled;
-      // 后退键：手动换一张背景，只按下的瞬间触发，不影响定时轮换
-      case LogicalKeyboardKey.escape:
-      case LogicalKeyboardKey.goBack:
-        if (event is KeyDownEvent) controller.refreshBackground();
-        return KeyEventResult.handled;
+      // 后退键交给 PopScope 处理（见 build），此处不拦截，避免重复换图
       // 菜单键：短按打开系统设置，长按重复不重复拉起
       case LogicalKeyboardKey.contextMenu:
         if (event is KeyDownEvent) PlatformService.openSettings();

@@ -32,7 +32,8 @@ class MainActivity : FlutterActivity() {
                     result.error("APP_NOT_FOUND", "No launch intent for $packageName", null)
                     return
                 }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // 目标 task 还在后台时原样切回前台（恢复栈顶），避免重新走启动页
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 startActivity(intent)
                 result.success(true)
             }
@@ -56,7 +57,7 @@ class MainActivity : FlutterActivity() {
                 extras?.forEach { (key, value) ->
                     if (key is String && value is Int) intent.putExtra(key, value)
                 }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 startActivity(intent)
                 result.success(true)
             }
