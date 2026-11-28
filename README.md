@@ -110,4 +110,4 @@ adb -s <TV_IP>:5555 shell cmd package set-home-activity com.mitv.tvhome/.MainAct
 adb -s <TV_IP>:5555 shell reboot
 ```
 
-> 第 6 步只是卸载本 App（撤销操作），小米桌面还在，卸载后按上面命令设回默认桌面即可恢复。`com.xiaomi.mitv.settings/.entry.FallbackHome` 是系统开机兜底桌面，不要禁用，否则开机可能进不去桌面
+> 第 6 步只是卸载本 App（撤销操作），小米桌面还在，卸载后按上面命令设回默认桌面即可恢复。`com.xiaomi.mitv.settings/.entry.FallbackHome` 是系统开机兜底桌面，不要禁用，否则开机可能进不去桌面。
