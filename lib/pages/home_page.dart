@@ -18,6 +18,22 @@ class HomePage extends GetView<HomeController> {
     Shadow(offset: Offset(0, 2), blurRadius: 4, color: Colors.black54),
   ];
 
+  /// 背景图淡入：本地图多同步命中直接显示，网络图首次解码完成再渐显
+  static Widget _fadeInBuilder(
+    BuildContext context,
+    Widget child,
+    int? frame,
+    bool wasSynchronouslyLoaded,
+  ) {
+    if (wasSynchronouslyLoaded) return child;
+    return AnimatedOpacity(
+      opacity: frame == null ? 0 : 1,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 桌面是根页面，系统返回键不能退出：一旦 finish，作为 HOME 会被系统重新拉起，表现为整页重启。
@@ -47,11 +63,19 @@ class HomePage extends GetView<HomeController> {
               key: ValueKey(controller.backgroundImage.value),
               child: controller.backgroundImage.value.isEmpty
                   ? const SizedBox.shrink()
-                  : Image.asset(
-                      controller.backgroundImage.value,
-                      fit: BoxFit.cover,
-                      cacheHeight: 2160,
-                    ),
+                  : controller.backgroundImage.value.startsWith('http')
+                      ? Image.network(
+                          controller.backgroundImage.value,
+                          fit: BoxFit.cover,
+                          cacheHeight: 2160,
+                          frameBuilder: _fadeInBuilder,
+                        )
+                      : Image.asset(
+                          controller.backgroundImage.value,
+                          fit: BoxFit.cover,
+                          cacheHeight: 2160,
+                          frameBuilder: _fadeInBuilder,
+                        ),
             ),
           ),
         ),

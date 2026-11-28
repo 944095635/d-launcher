@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/models/app_info.dart';
+import 'package:dlauncher/services/background_service.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/services/weather_service.dart';
 
@@ -125,12 +126,31 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     weekday.value = _weekdays[now.weekday - 1];
   }
 
-  /// 启动背景轮换：先随机选一张，之后每 30 分钟换一次
+  /// 启动背景轮换：缓存优先立即显示，再异步拉取服务器配置覆盖。
+  /// 无缓存时等请求返回；两者都拿不到才用本地打包图片兜底。
   Future<void> _startBackgroundRotation() async {
-    _backgroundImages = await _loadBackgroundImages();
-    if (_backgroundImages.isEmpty) return;
-    _rotateBackground();
-    _backgroundTimer = Timer.periodic(
+    final cached = BackgroundService.cachedImages;
+    if (cached.isNotEmpty) _applyBackgrounds(cached);
+
+    final remote = await BackgroundService.fetchImages();
+    if (remote != null && remote.isNotEmpty) {
+      await BackgroundService.saveImages(remote);
+      _applyBackgrounds(remote);
+    } else if (cached.isEmpty) {
+      _applyBackgrounds(await _loadBackgroundImages());
+    }
+  }
+
+  /// 应用一组背景并启动轮换；定时器只建一次，列表变化才重选图片。
+  void _applyBackgrounds(List<String> images) {
+    if (images.isEmpty) return;
+    final changed = images.length != _backgroundImages.length ||
+        images.asMap().entries.any(
+              (entry) => entry.value != _backgroundImages[entry.key],
+            );
+    _backgroundImages = images;
+    if (changed) _rotateBackground();
+    _backgroundTimer ??= Timer.periodic(
       _backgroundInterval,
       (_) => _rotateBackground(),
     );
