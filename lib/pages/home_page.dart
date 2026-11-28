@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -64,18 +65,20 @@ class HomePage extends GetView<HomeController> {
               child: controller.backgroundImage.value.isEmpty
                   ? const SizedBox.shrink()
                   : controller.backgroundImage.value.startsWith('http')
-                      ? Image.network(
-                          controller.backgroundImage.value,
-                          fit: BoxFit.cover,
-                          cacheHeight: 2160,
-                          frameBuilder: _fadeInBuilder,
-                        )
-                      : Image.asset(
-                          controller.backgroundImage.value,
-                          fit: BoxFit.cover,
-                          cacheHeight: 2160,
-                          frameBuilder: _fadeInBuilder,
-                        ),
+                  // 网络图走磁盘缓存，重复进首页不再重新下载；淡入参数与本地图保持一致
+                  ? CachedNetworkImage(
+                      imageUrl: controller.backgroundImage.value,
+                      fit: BoxFit.cover,
+                      memCacheHeight: 2160,
+                      fadeInDuration: const Duration(milliseconds: 500),
+                      fadeInCurve: Curves.easeOut,
+                    )
+                  : Image.asset(
+                      controller.backgroundImage.value,
+                      fit: BoxFit.cover,
+                      cacheHeight: 2160,
+                      frameBuilder: _fadeInBuilder,
+                    ),
             ),
           ),
         ),
@@ -94,21 +97,9 @@ class HomePage extends GetView<HomeController> {
                 child: Column(
                   crossAxisAlignment: .stretch,
                   children: [
-                    // 天气启动时拉取一次，未返回前显示占位，避免文字区域塌陷
-                    Obx(() => Text(
-                          controller.weatherText.value.isEmpty
-                              ? '天气获取中…'
-                              : controller.weatherText.value,
-                          textAlign: .end,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Color.fromARGB(255, 220, 220, 220),
-                            shadows: _textShadows,
-                          ),
-                        )),
                     Spacer(),
                     Expanded(
-                      flex: 3,
+                      flex: 2,
                       child: _buildCards(),
                     ),
                   ],
@@ -127,53 +118,69 @@ class HomePage extends GetView<HomeController> {
       fit: BoxFit.none,
       alignment: Alignment.topLeft,
       // 不设固定尺寸，Column 按内容布局；FittedBox 拿到真实尺寸再统一缩放
-      child: Obx(
-        () => Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [
-            // 黄底时间：高度随文字自适应，压缩行高去掉字形下方的行高留白
-            Text(
-              controller.time.value,
-              // 字体继承全局 ZCOOL，只有 Regular 一种字重，不再指定 w300
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Obx(
+            () => Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .start,
+              children: [
+                // 黄底时间：高度随文字自适应，压缩行高去掉字形下方的行高留白
+                Text(
+                  controller.time.value,
+                  // 字体继承全局 ZCOOL，只有 Regular 一种字重，不再指定 w300
+                  style: const TextStyle(
+                    fontSize: 120,
+                    // 行高压到字号的 0.8，黄块紧贴数字；按比例缩放，换字号/字体无需改这里
+                    height: 1,
+                    // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
+                    fontFeatures: [FontFeature.tabularFigures()],
+                    shadows: _textShadows,
+                  ),
+                ),
+                // 日期与星期整体右缩进，避免与时间左端齐平显得突出
+                Row(
+                  spacing: 8,
+                  children: [
+                    Text(
+                      controller.date.value,
+                      // 日期与星期沿用时间的字体，保持视觉统一
+                      style: const TextStyle(
+                        fontSize: 22,
+                        color: Color.fromARGB(255, 230, 230, 230),
+                        shadows: _textShadows,
+                      ),
+                    ),
+                    Text(
+                      controller.weekday.value,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 220, 220, 220),
+                        shadows: _textShadows,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // 天气启动时拉取一次，未返回前显示占位，避免文字区域塌陷
+          Obx(
+            () => Text(
+              controller.weatherText.value.isEmpty
+                  ? '天气获取中…'
+                  : controller.weatherText.value,
+              textAlign: .end,
               style: const TextStyle(
-                fontSize: 120,
-                // 行高压到字号的 0.8，黄块紧贴数字；按比例缩放，换字号/字体无需改这里
-                height: 1,
-                // 等宽数字：分钟变化时每行宽度恒定，避免 FittedBox 缩放跳动
-                fontFeatures: [FontFeature.tabularFigures()],
+                fontSize: 20,
+                color: Color.fromARGB(255, 220, 220, 220),
                 shadows: _textShadows,
               ),
             ),
-            // 日期与星期整体右缩进，避免与时间左端齐平显得突出
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Column(
-                mainAxisSize: .min,
-                crossAxisAlignment: .start,
-                children: [
-                  Text(
-                    controller.date.value,
-                    // 日期与星期沿用时间的字体，保持视觉统一
-                    style: const TextStyle(
-                      fontSize: 26,
-                      color: Color.fromARGB(255, 230, 230, 230),
-                      shadows: _textShadows,
-                    ),
-                  ),
-                  Text(
-                    controller.weekday.value,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 220, 220, 220),
-                      shadows: _textShadows,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
