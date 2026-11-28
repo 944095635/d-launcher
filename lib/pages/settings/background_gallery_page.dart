@@ -114,36 +114,62 @@ class _BackgroundGalleryPageState extends State<BackgroundGalleryPage> {
     return Center(
       child: GestureDetector(
         onTap: () => _select(image),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          margin: const EdgeInsets.symmetric(horizontal: 12),
-          padding: EdgeInsets.all(current ? 4 : 2),
-          decoration: BoxDecoration(
-            color: current ? Colors.amber : Colors.white24,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          // 宽度取 PageView 视口宽，按 16:9 自动算高度
-          child: AspectRatio(
-            aspectRatio: 16 / 9,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(7),
-              child: isNone
-                  ? Container(
-                      color: const Color(0xFF2A2A2A),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        '不使用背景',
-                        style: TextStyle(color: Colors.white70, fontSize: 28),
+        child: AnimatedScale(
+          scale: current ? 1.06 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.all(3),
+            // 选中光效参考卡片：外层柔光 + 中层光带 + 内层清晰白边
+            decoration: current
+                ? BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white54, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        blurRadius: 18,
+                        spreadRadius: 4,
                       ),
-                    )
-                  : image.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: image,
-                          fit: BoxFit.cover,
-                          memCacheHeight: 1080,
-                          fadeInDuration: const Duration(milliseconds: 300),
-                        )
-                      : Image.asset(image, fit: BoxFit.cover),
+                      BoxShadow(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  )
+                : BoxDecoration(
+                    color: const Color(0xFF242424),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white24, width: 1),
+                  ),
+            // 宽度取 PageView 视口宽，按 16:9 自动算高度
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: isNone
+                    ? Container(
+                        color: const Color(0xFF2A2A2A),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '不使用背景',
+                          style: TextStyle(color: Colors.white70, fontSize: 28),
+                        ),
+                      )
+                    : image.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: image,
+                            fit: BoxFit.cover,
+                            memCacheHeight: 1080,
+                            fadeInDuration: const Duration(milliseconds: 300),
+                          )
+                        : Image.asset(image, fit: BoxFit.cover),
+              ),
             ),
           ),
         ),
