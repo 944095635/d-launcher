@@ -50,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
           final addIndex = controller.apps.length;
           return ListView.builder(
             controller: _scroll.controller,
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 20),
             itemCount: addIndex + 2,
             itemBuilder: (context, index) {
               if (index < addIndex) return _buildAppItem(index, focused);

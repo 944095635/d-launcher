@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:dlauncher/app/route_names.dart';
 import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
-/// 设置一级菜单：背景设置 / App 设置，遥控器上下选择、确认进入。
+/// 设置一级菜单：App 设置 / 背景设置，遥控器上下选择、确认进入。
 class SettingsMenuPage extends StatefulWidget {
   const SettingsMenuPage({super.key});
 
@@ -15,8 +15,8 @@ class SettingsMenuPage extends StatefulWidget {
 }
 
 class _SettingsMenuPageState extends State<SettingsMenuPage> {
-  static const _items = ['背景设置', 'App 设置'];
-  static const _routes = [RouteNames.settingsBackground, RouteNames.settingsApps];
+  static const _items = ['App 设置', '背景设置'];
+  static const _routes = [RouteNames.settingsApps, RouteNames.settingsBackground];
 
   int _focused = 0;
 
@@ -43,7 +43,7 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
         onKeyEvent: _onKeyEvent,
         child: ListView.builder(
           controller: _scroll.controller,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           itemCount: _items.length,
           itemBuilder: (context, index) => _buildItem(index),
         ),
@@ -66,7 +66,7 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
         spacing: 20,
         children: [
           Icon(
-            index == 0 ? Icons.image : Icons.apps,
+            index == 0 ? Icons.apps : Icons.image,
             color: selected ? Colors.amber : Colors.white54,
             size: 28,
           ),

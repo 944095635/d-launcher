@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:dlauncher/models/app_info.dart';
 import 'package:dlauncher/models/installed_app.dart';
 import 'package:dlauncher/pages/settings/app_picker_page.dart';
+import 'package:dlauncher/pages/settings/card_gallery_page.dart';
 import 'package:dlauncher/pages/settings/settings_controller.dart';
 import 'package:dlauncher/pages/settings/text_input_dialog.dart';
 import 'package:dlauncher/widgets/character_card.dart';
@@ -23,7 +24,8 @@ class CardEditPage extends StatefulWidget {
 }
 
 class _CardEditPageState extends State<CardEditPage> {
-  /// 预设文字/背景色，确认键在其中循环，避免电视上取色
+  /// 预设文字/背景色，确认键在其中循环，避免电视上取色。
+  /// 前 6 种为原有配色，后面追加红橙黄绿紫、深灰。
   static const _palette = [
     '#FFFFFFFF',
     '#FF9E9E9E',
@@ -31,17 +33,24 @@ class _CardEditPageState extends State<CardEditPage> {
     '#FF2D78F9',
     '#FF02B0DB',
     '#FF000000',
+    '#FFF44336',
+    '#FFFF9800',
+    '#FFFFEB3B',
+    '#FF4CAF50',
+    '#FF9C27B0',
+    '#FF424242',
   ];
 
-  /// 预设卡面贴图，与打包资源对应
-  static const _images = [
-    'assets/images/card_1.jpg',
-    'assets/images/card_2.jpg',
-    'assets/images/card_3.jpg',
-    'assets/images/card_4.jpg',
+  static const _fields = [
+    '名称',
+    '类型',
+    '包名',
+    '卡面贴图',
+    '文字颜色',
+    '背景颜色',
+    '蒙版颜色',
+    '删除卡片',
   ];
-
-  static const _fields = ['名称', '类型', '包名', '卡面贴图', '文字颜色', '背景颜色', '删除卡片'];
 
   late AppInfo _app;
   int _focused = 0;
@@ -84,7 +93,7 @@ class _CardEditPageState extends State<CardEditPage> {
               onKeyEvent: _onKeyEvent,
               child: ListView.builder(
                 controller: _scroll.controller,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 itemCount: _fields.length,
                 itemBuilder: (context, index) => _buildField(index),
               ),
@@ -95,17 +104,24 @@ class _CardEditPageState extends State<CardEditPage> {
     );
   }
 
-  /// 按当前编辑值渲染卡片，改颜色/贴图/名称后 setState 即时反映到这里
+  /// 按当前编辑值渲染卡片，改颜色/贴图/名称后 setState 即时反映到这里。
+  /// 点击预览卡进入贴图选择页。
   Widget _buildPreview() {
-    return FittedBox(
-      fit: .none,
-      child: CharacterCard(
-        name: _app.name,
-        backgroundColor: _app.backgroundColor ?? Colors.black,
-        imageAsset: _app.imageAsset,
-        textColor: _app.textColor,
-        // 预览态固定高亮，和首页聚焦卡片的样子一致
-        isFocused: true,
+    return GestureDetector(
+      // 整块预览区域都可点击，不受 CharacterCard 实际尺寸限制
+      behavior: HitTestBehavior.opaque,
+      onTap: _pickImage,
+      child: FittedBox(
+        fit: .none,
+        child: CharacterCard(
+          name: _app.name,
+          backgroundColor: _app.backgroundColor ?? Colors.black,
+          imageAsset: _app.imageAsset,
+          textColor: _app.textColor,
+          maskColor: _app.maskColor,
+          // 预览态固定高亮，和首页聚焦卡片的样子一致
+          isFocused: true,
+        ),
       ),
     );
   }
@@ -115,7 +131,7 @@ class _CardEditPageState extends State<CardEditPage> {
     final isDelete = index == _fields.length - 1;
     // 删除项整行用红色区分，和普通字段一眼可分
     final accent = isDelete ? Colors.redAccent : Colors.white;
-    return AnimatedContainer(
+    final field = AnimatedContainer(
       key: _scroll.keyOf(index),
       duration: const Duration(milliseconds: 120),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
@@ -152,6 +168,10 @@ class _CardEditPageState extends State<CardEditPage> {
         ],
       ),
     );
+    // 卡面贴图是唯一用子页面选择的字段，鼠标/触摸点击整行也直接进选择页
+    return index == 3
+        ? GestureDetector(onTap: _pickImage, child: field)
+        : field;
   }
 
   String _fieldValue(int index) {
@@ -163,7 +183,8 @@ class _CardEditPageState extends State<CardEditPage> {
       case 2:
         return _app.packageName ?? '（未设置）';
       case 3:
-        return _app.imageAsset ?? '（无贴图）';
+        // 贴图地址通常是长 URL，菜单里只提示是否已选，避免挤占整行
+        return _app.imageAsset == null ? '（无贴图）' : '已选择';
       case 4:
         return _colorLabel(_app.textColor.toARGB32());
       case 5:
@@ -171,6 +192,8 @@ class _CardEditPageState extends State<CardEditPage> {
             ? '（默认黑）'
             : _colorLabel(_app.backgroundColor!.toARGB32());
       case 6:
+        return _app.maskColor.label;
+      case 7:
         return _deleteArmed ? '再按一次确认删除' : '删除这张卡片';
       default:
         return '';
@@ -206,6 +229,10 @@ class _CardEditPageState extends State<CardEditPage> {
       case LogicalKeyboardKey.enter:
         _editFocused();
         return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowLeft:
+        // 遥控器无触摸，左键作等价入口进入贴图选择页
+        _pickImage();
+        return KeyEventResult.handled;
       default:
         // 返回键交回系统，由 GetX 路由弹栈
         return KeyEventResult.ignored;
@@ -232,11 +259,15 @@ class _CardEditPageState extends State<CardEditPage> {
       case 2:
         await _pickPackage();
       case 3:
-        _cycleImage();
+        // 选择页内部已写盘并刷新，这里直接返回，避免末尾重复写一次
+        await _pickImage();
+        return;
       case 4:
         _cycleColor(text: true);
       case 5:
         _cycleColor(text: false);
+      case 6:
+        _cycleMaskColor();
     }
     // 每次修改即时写回 controller（内部落盘），返回键不再承担保存职责
     Get.find<SettingsController>().updateApp(widget.index, _app);
@@ -267,6 +298,7 @@ class _CardEditPageState extends State<CardEditPage> {
         textColor: _app.textColor,
         backgroundColor: _app.backgroundColor,
         imageAsset: _app.imageAsset,
+        maskColor: _app.maskColor,
       );
     }
   }
@@ -279,11 +311,23 @@ class _CardEditPageState extends State<CardEditPage> {
     _app = _app.withAppType(next);
   }
 
-  void _cycleImage() {
-    final current = _app.imageAsset;
-    final index = _images.indexOf(current ?? '');
-    final next = _images[(index + 1) % _images.length];
-    _app = _copyWith(imageAsset: next);
+  /// 打开贴图选择页：返回 null 是取消；空串是「不使用卡片」，清掉贴图
+  Future<void> _pickImage() async {
+    final picked = await Get.to<String>(
+      () => CardGalleryPage(
+        initialImage: _app.imageAsset,
+        cardName: _app.name,
+        textColor: _app.textColor,
+        backgroundColor: _app.backgroundColor,
+        maskColor: _app.maskColor,
+      ),
+    );
+    if (picked == null) return;
+    // 空串表示清除贴图，要显式传标记，不能靠 null（null 在 _copyWith 里表示「不覆盖」）
+    final clear = picked.isEmpty;
+    _app = _copyWith(imageAsset: clear ? null : picked, clearImage: clear);
+    Get.find<SettingsController>().updateApp(widget.index, _app);
+    setState(() {});
   }
 
   void _cycleColor({required bool text}) {
@@ -298,7 +342,17 @@ class _CardEditPageState extends State<CardEditPage> {
     _app = text ? _copyWith(textColor: color) : _copyWith(backgroundColor: color);
   }
 
-  /// 基于当前值生成新 AppInfo，只覆盖传入字段
+  /// 蒙版颜色只有黑白两值，确认键直接取反
+  void _cycleMaskColor() {
+    _app = _copyWith(
+      maskColor: _app.maskColor == CardMaskColor.black
+          ? CardMaskColor.white
+          : CardMaskColor.black,
+    );
+  }
+
+  /// 基于当前值生成新 AppInfo，只覆盖传入字段。
+  /// clearImage 用于把贴图置空，因为 null 在这里表示「不覆盖」。
   AppInfo _copyWith({
     String? name,
     String? packageName,
@@ -308,6 +362,8 @@ class _CardEditPageState extends State<CardEditPage> {
     Color? textColor,
     Color? backgroundColor,
     String? imageAsset,
+    CardMaskColor? maskColor,
+    bool clearImage = false,
   }) {
     return AppInfo(
       name: name ?? _app.name,
@@ -317,7 +373,8 @@ class _CardEditPageState extends State<CardEditPage> {
       launchIntExtras: launchIntExtras ?? _app.launchIntExtras,
       textColor: textColor ?? _app.textColor,
       backgroundColor: backgroundColor ?? _app.backgroundColor,
-      imageAsset: imageAsset ?? _app.imageAsset,
+      imageAsset: clearImage ? null : (imageAsset ?? _app.imageAsset),
+      maskColor: maskColor ?? _app.maskColor,
     );
   }
 

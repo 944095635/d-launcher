@@ -60,6 +60,7 @@ class _LocalImagePickerPageState extends State<LocalImagePickerPage> {
           }
           return ListView.builder(
             controller: _scroll.controller,
+            padding: const EdgeInsets.symmetric(vertical: 20),
             itemCount: _images.length,
             itemBuilder: (context, index) {
               final selected = _focused == index;

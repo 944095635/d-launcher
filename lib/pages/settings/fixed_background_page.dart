@@ -43,7 +43,7 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
         onKeyEvent: _onKeyEvent,
         child: ListView.builder(
           controller: _scroll.controller,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           itemCount: _items.length,
           itemBuilder: (context, index) => _buildItem(index),
         ),

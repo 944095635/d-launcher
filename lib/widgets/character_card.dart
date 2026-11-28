@@ -1,4 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'package:dlauncher/models/app_info.dart';
 
 /// 单张应用卡片：带圆角的斜切卡面，右下角显示 App 名称。
 class CharacterCard extends StatelessWidget {
@@ -8,6 +11,7 @@ class CharacterCard extends StatelessWidget {
     this.backgroundColor = Colors.black,
     this.imageAsset,
     this.textColor = Colors.white,
+    this.maskColor = CardMaskColor.black,
     this.isFocused = false,
     this.child,
   });
@@ -28,33 +32,20 @@ class CharacterCard extends StatelessWidget {
   /// 卡面背景色，默认黑；有贴图时不绘制底色
   final Color backgroundColor;
 
-  /// 卡面贴图，http(s) 开头走网络图，否则当作本地资源路径；为空则不显示
+  /// 卡面贴图网络地址，为空则不显示
   final String? imageAsset;
 
   /// 卡面文字颜色，默认白
   final Color textColor;
+
+  /// 底部渐变蒙版颜色，默认黑，垫在名称下提升可读性
+  final CardMaskColor maskColor;
 
   /// 是否为遥控器焦点卡片，焦点态高亮描边
   final bool isFocused;
 
   /// 卡片内容，暂为空，后续按需填充
   final Widget? child;
-
-  /// 图片淡入：缓存命中（切焦点重建）直接显示，只有首次解码完成才渐变出现
-  Widget _fadeInBuilder(
-    BuildContext context,
-    Widget child,
-    int? frame,
-    bool wasSynchronouslyLoaded,
-  ) {
-    if (wasSynchronouslyLoaded) return child;
-    return AnimatedOpacity(
-      opacity: frame == null ? 0 : 1,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-      child: child,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,34 +69,29 @@ class CharacterCard extends StatelessWidget {
             clipper: _CardClipper(),
             child: Stack(
               children: [
-                // 贴图铺满卡面，由 ClipPath 裁成斜切形状；支持网络地址与本地资源
-                // 只按高度设缓存：cover 由高度撑满，宽度按比例推导且必然够覆盖，强行双设会破坏比例
+                // 贴图铺满卡面，由 ClipPath 裁成斜切形状；统一走磁盘缓存
                 if (imageAsset != null)
                   Positioned.fill(
-                    child: imageAsset!.startsWith('http')
-                        ? Image.network(
-                            imageAsset!,
-                            fit: BoxFit.cover,
-                            cacheHeight: (height * cacheScale).round(),
-                            frameBuilder: _fadeInBuilder,
-                          )
-                        : Image.asset(
-                            imageAsset!,
-                            fit: BoxFit.cover,
-                            cacheHeight: (height * cacheScale).round(),
-                            frameBuilder: _fadeInBuilder,
-                          ),
+                    child: CachedNetworkImage(
+                      imageUrl: imageAsset!,
+                      fit: BoxFit.cover,
+                      // 只按高度缓存：cover 由高度撑满，宽度按比例推导必然够覆盖
+                      memCacheHeight: (height * cacheScale).round(),
+                      fadeInDuration: const Duration(milliseconds: 500),
+                      fadeInCurve: Curves.easeOut,
+                    ),
                   ),
                 ?child,
-                // 底部黑色渐变蒙版：由底部全黑向上渐隐到全透明，垫在名称下提升可读性
-                const Positioned.fill(
+                // 底部渐变蒙版：由底部实色向上渐隐到全透明，垫在名称下提升可读性。
+                // 颜色由卡片配置决定（黑/白），需配合同色系的文字颜色才有对比
+                Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black,
+                          maskColor.color,
                           Colors.transparent,
                         ],
                         stops: [0, .8],

@@ -50,6 +50,7 @@ class _AppPickerPageState extends State<AppPickerPage> {
           }
           return ListView.builder(
             controller: _scroll.controller,
+            padding: const EdgeInsets.symmetric(vertical: 20),
             itemCount: controller.installedApps.length,
             itemBuilder: (context, index) {
               final app = controller.installedApps[index];

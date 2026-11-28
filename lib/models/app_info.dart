@@ -24,6 +24,20 @@ enum AppType {
   static const hdmiComponent = 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity';
 }
 
+/// 卡面底部蒙版颜色：只支持黑白两色，垫在名称下提升文字可读性。
+enum CardMaskColor {
+  black(label: '黑色', color: Colors.black),
+  white(label: '白色', color: Colors.white);
+
+  const CardMaskColor({required this.label, required this.color});
+
+  /// 编辑页显示的名字
+  final String label;
+
+  /// 渐变蒙版实际使用的颜色
+  final Color color;
+}
+
 /// 桌面 App 信息：卡片展示与后续拉起应用的数据载体。
 class AppInfo {
   const AppInfo({
@@ -35,6 +49,7 @@ class AppInfo {
     this.backgroundColor,
     this.imageAsset,
     this.textColor = Colors.white,
+    this.maskColor = CardMaskColor.black,
   });
 
   /// 卡片上显示的名称，如「哔哩哔哩」
@@ -61,6 +76,9 @@ class AppInfo {
   /// 卡片文字颜色，默认白，适配深色系卡面
   final Color textColor;
 
+  /// 卡面底部渐变蒙版颜色，默认黑；与 textColor 搭配使用（白字配黑蒙版）
+  final CardMaskColor maskColor;
+
   /// 由底层启动参数反推类型，兼容旧配置：配了显式组件就是信号源，按 input 值区分
   AppType get appType {
     if (launchComponent == null || launchComponent!.isEmpty) return AppType.app;
@@ -83,6 +101,7 @@ class AppInfo {
         backgroundColor: backgroundColor,
         imageAsset: imageAsset,
         textColor: textColor,
+        maskColor: maskColor,
       );
     }
     return AppInfo(
@@ -91,6 +110,7 @@ class AppInfo {
       backgroundColor: backgroundColor,
       imageAsset: imageAsset,
       textColor: textColor,
+      maskColor: maskColor,
     );
   }
 
@@ -107,6 +127,8 @@ class AppInfo {
       backgroundColor: _parseColor(json['backgroundColor'] as String?),
       imageAsset: json['imageAsset'] as String?,
       textColor: _parseColor(json['textColor'] as String?) ?? Colors.white,
+      // 旧配置没有这个字段，按默认的黑蒙版处理
+      maskColor: _parseMaskColor(json['maskColor'] as String?),
     );
   }
 
@@ -120,6 +142,7 @@ class AppInfo {
         'backgroundColor': _colorToString(backgroundColor),
         'imageAsset': imageAsset,
         'textColor': _colorToString(textColor),
+        'maskColor': maskColor.name,
       };
 
   /// #AARRGGBB → Color，格式不对返回 null，交给字段默认值兜底
@@ -130,6 +153,13 @@ class AppInfo {
     final argb = int.tryParse(value.substring(1), radix: 16);
     return argb == null ? null : Color(argb);
   }
+
+  /// 非法取值回落到黑蒙版，避免脏配置导致渲染异常
+  static CardMaskColor _parseMaskColor(String? value) =>
+      CardMaskColor.values.firstWhere(
+        (color) => color.name == value,
+        orElse: () => CardMaskColor.black,
+      );
 
   static String? _colorToString(Color? color) =>
       color == null ? null : '#${color.toARGB32().toRadixString(16).padLeft(8, '0')}';

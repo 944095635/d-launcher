@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'package:dlauncher/services/prefs_service.dart';
 
-/// 背景展示方式：固定一张，或从服务器清单随机轮换
-enum BackgroundMode { fixed, server }
+/// 背景展示方式：不使用背景、固定一张，或从服务器清单随机轮换
+enum BackgroundMode { none, fixed, server }
 
 /// 背景图配置服务：管理展示方式、固定图地址，以及服务器清单的拉取与缓存。
 class BackgroundService {
@@ -14,7 +14,7 @@ class BackgroundService {
   static const String baseUrl = 'http://music.dmskin.com';
 
   /// 背景配置路径
-  static const String configPath = '/music/dLauncher/bg.json';
+  static const String configPath = '/music/dLauncher/bg/bg.json';
 
   static const String _cacheKey = 'background_images';
   static const String _modeKey = 'background_mode';
@@ -25,10 +25,11 @@ class BackgroundService {
   static const String _cardImagePrefix = 'card_';
 
   /// 当前展示方式，默认服务器随机
-  static BackgroundMode get mode =>
-      PrefsService.prefs.getString(_modeKey) == 'fixed'
-          ? BackgroundMode.fixed
-          : BackgroundMode.server;
+  static BackgroundMode get mode => switch (PrefsService.prefs.getString(_modeKey)) {
+        'none' => BackgroundMode.none,
+        'fixed' => BackgroundMode.fixed,
+        _ => BackgroundMode.server,
+      };
 
   static Future<bool> saveMode(BackgroundMode mode) =>
       PrefsService.prefs.setString(_modeKey, mode.name);

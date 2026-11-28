@@ -225,6 +225,7 @@ class HomePage extends GetView<HomeController> {
                             controller.apps[start + i].backgroundColor ?? Colors.black,
                         imageAsset: controller.apps[start + i].imageAsset,
                         textColor: controller.apps[start + i].textColor,
+                        maskColor: controller.apps[start + i].maskColor,
                         // 当前焦点卡片高亮
                         isFocused: start + i == focused,
                       ),
