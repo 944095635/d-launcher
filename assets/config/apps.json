@@ -1,0 +1,35 @@
+{
+  "apps": [
+    {
+      "name": "哔哩哔哩",
+      "packageName": "com.xiaodianshi.tv.yst",
+      "backgroundColor": "#FFFF6182",
+      "textColor": "#FFFF6182",
+      "imageAsset": "assets/images/card_1.jpg"
+    },
+    {
+      "name": "飞牛",
+      "packageName": "com.trim.tv",
+      "backgroundColor": "#FF2D78F9",
+      "textColor": "#FF2D78F9",
+      "imageAsset": "assets/images/card_2.jpg"
+    },
+    {
+      "name": "电脑",
+      "packageName": "com.xiaomi.mitv.tvplayer",
+      "textColor": "#FF02B0DB",
+      "imageAsset": "assets/images/card_3.jpg",
+      "launchAction": "com.xiaomi.mitv.tvplayer.EXTSRC_PLAY",
+      "launchComponent": "com.xiaomi.mitv.tvplayer/.ExternalSourceActivity",
+      "launchIntExtras": {
+        "input": 25
+      }
+    },
+    {
+      "name": "月光",
+      "packageName": "com.limelight",
+      "textColor": "#FF9E9E9E",
+      "imageAsset": "assets/images/card_4.jpg"
+    }
+  ]
+}

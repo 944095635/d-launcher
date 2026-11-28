@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'package:dlauncher/models/installed_app.dart';
+
 /// Flutter 与原生 Android 通信的通道，系统能力统一从这里桥接。
 class PlatformService {
   static const MethodChannel _channel = MethodChannel('com.dlauncher/platform');
@@ -39,6 +41,20 @@ class PlatformService {
       return result ?? false;
     } on PlatformException {
       return false;
+    }
+  }
+
+  /// 列出可拉起的已安装应用，供设置页点选包名；失败返回空列表
+  static Future<List<InstalledApp>> getInstalledApps() async {
+    try {
+      final result = await invoke<List<dynamic>>('getInstalledApps');
+      if (result == null) return const [];
+      return result
+          .whereType<Map<dynamic, dynamic>>()
+          .map(InstalledApp.fromJson)
+          .toList();
+    } on PlatformException {
+      return const [];
     }
   }
 }

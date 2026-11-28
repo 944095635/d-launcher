@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:flutter/services.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:dlauncher/pages/home_controller.dart';
+import 'package:dlauncher/pages/home/home_controller.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/widgets/character_card.dart';
 
@@ -185,75 +183,71 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  /// 右侧四张卡片：水平等距、高低交替错落，整体等比缩放
+  /// 右侧应用卡片：横向 ListView，数量不限；焦点变化由控制器滚入视野
   Widget _buildCards() {
-    // 水平间隔由步长决定，需大于卡宽避免重叠；交替高低由倾角决定
-    const angle = 0 * pi / 180;
-    const step = 160.0;
-    final dx = step * cos(angle);
-    final dy = step * sin(angle);
-    // 斜切顶边右移，高低错开会让相邻缝隙宽窄交替；按高低差反向补偿水平位置
-    final skew = CharacterCard.width * CharacterCard.skewRatio;
-    final offsetX = skew * dy / CharacterCard.height;
     return Focus(
       // 进入首页自动聚焦到卡片区，遥控器左右键在卡片间切换
       autofocus: true,
       onKeyEvent: _onKeyEvent,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.centerRight,
-        child: SizedBox(
-          // 容器按卡片实际占位计算，改角度或尺寸无需手调
-          width: 30 + 3 * dx - offsetX + CharacterCard.width + 30,
-          height: 30 + dy + CharacterCard.height + 30,
-          child: Obx(
-            () => Stack(
-              children: [
-                for (var i = 0; i < controller.apps.length; i++)
-                  Positioned(
-                    // 低的卡左移，抵消斜切造成的缝隙变宽
-                    left: 30 + i * dx - (i.isOdd ? offsetX : 0),
-                    // 奇偶交替：偶数在上、奇数在下，形成高低高低的节奏
-                    top: 30 + (i.isOdd ? dy : 0),
-                    child: CharacterCard(
-                      name: controller.apps[i].name,
-                      backgroundColor:
-                          controller.apps[i].backgroundColor ?? Colors.black,
-                      imageAsset: controller.apps[i].imageAsset,
-                      textColor: controller.apps[i].textColor,
-                      // 当前焦点卡片高亮
-                      isFocused: controller.focusedIndex.value == i,
-                    ),
-                  ),
-              ],
-            ),
+      // 外层 Obx 只追踪卡片数量，焦点变化由每张卡自身的 Obx 处理，避免整表重建
+      child: Obx(
+        () => ListView.builder(
+          controller: controller.cardScrollController,
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: HomeController.cardPadding,
+            vertical: 20,
           ),
+          itemCount: controller.apps.length,
+          itemBuilder: (context, index) {
+            final app = controller.apps[index];
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: HomeController.cardSpacing),
+                child: Obx(
+                  () => CharacterCard(
+                    name: app.name,
+                    backgroundColor: app.backgroundColor ?? Colors.black,
+                    imageAsset: app.imageAsset,
+                    textColor: app.textColor,
+                    // 当前焦点卡片高亮
+                    isFocused: controller.focusedIndex.value == index,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  /// 遥控器按键：左右切焦点，确认键拉起当前应用
+  /// 遥控器按键：左右切焦点，上键进设置，确认键拉起应用，菜单键开系统设置
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }
+    final isDown = event is KeyDownEvent;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowLeft:
-        controller.moveFocus(-1);
+        if (isDown) controller.moveFocus(-1);
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowRight:
-        controller.moveFocus(1);
+        if (isDown) controller.moveFocus(1);
+        return KeyEventResult.handled;
+      // 上键进桌面设置页，只在按下瞬间触发一次
+      case LogicalKeyboardKey.arrowUp:
+        if (isDown) controller.openSettingsPage();
         return KeyEventResult.handled;
       // 确认键只在按下瞬间触发一次，长按重复不重复拉起
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
-        if (event is KeyDownEvent) controller.openFocusedApp();
+        if (isDown) controller.openFocusedApp();
         return KeyEventResult.handled;
       // 后退键交给 PopScope 处理（见 build），此处不拦截，避免重复换图
-      // 菜单键：短按打开系统设置，长按重复不重复拉起
+      // 菜单键短按开系统设置，长按重复不重复拉起
       case LogicalKeyboardKey.contextMenu:
-        if (event is KeyDownEvent) PlatformService.openSettings();
+        if (isDown) PlatformService.openSettings();
         return KeyEventResult.handled;
       default:
         return KeyEventResult.ignored;

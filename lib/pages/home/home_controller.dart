@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/services.dart';
-
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:dlauncher/app/route_names.dart';
 import 'package:dlauncher/models/app_info.dart';
+import 'package:dlauncher/services/app_config_service.dart';
 import 'package:dlauncher/services/background_service.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/services/weather_service.dart';
+import 'package:dlauncher/widgets/character_card.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController with WidgetsBindingObserver {
@@ -30,25 +31,28 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// 天气摘要，如「成都 晴 最高17° AQI59」；启动拉取一次，失败保留占位文案
   final weatherText = ''.obs;
 
-  /// 桌面卡片对应的 App 列表，最多 4 个
+  /// 桌面卡片对应的 App 列表，数量不限
   final apps = <AppInfo>[].obs;
 
   /// 当前获得焦点的卡片索引，遥控器左右键切换
   final focusedIndex = 0.obs;
 
+  /// 卡片列表滚动条，焦点移出视野时由控制器滚入
+  final cardScrollController = ScrollController();
+
   /// 首页背景图路径，定时从 images 目录随机切换
   final backgroundImage = ''.obs;
 
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
-  static const _maxApps = 4;
+
+  /// 卡片列表的左右留白、卡片间距与横向占位宽度，布局和焦点滚动共用
+  static const cardPadding = 30.0;
+  static const cardSpacing = 30.0;
+  static const cardStep = CharacterCard.width + cardSpacing;
 
   /// 时钟检查间隔：30 秒足够，回前台会另行立即校正
   static const _clockInterval = Duration(seconds: 30);
   static const _backgroundInterval = Duration(minutes: 30);
-  static const _imageDir = 'assets/images/';
-
-  /// 卡片贴图不参与背景轮换，避免背景与卡片撞图
-  static const _cardImagePrefix = 'card_';
 
   Timer? _backgroundTimer;
 
@@ -65,10 +69,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     // 单次定时器错过触发点后回前台会一次性跳到当前时间；周期检查回前台即自动校正
     // 间隔 30 秒即可，跳分最多延迟半分钟，换取更少的定时唤醒
     _timer = Timer.periodic(_clockInterval, (_) => _updateClock());
-    _initApps();
+    _loadApps();
     _startBackgroundRotation();
     // 天气只在启动时拉一次，不随后台轮换或时钟刷新
     _loadWeather();
+    // 焦点变化时把卡片滚入视野；列表尚未挂载时由滚动控制器判空跳过
+    ever(focusedIndex, _ensureCardVisible);
   }
 
   /// 启动时拉取一次天气，失败则保留页面上的占位文字
@@ -83,17 +89,39 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) _updateClock();
   }
 
-  /// 添加 App，超出上限则忽略，保证卡片不超过 4 张
-  void addApp(AppInfo app) {
-    if (apps.length >= _maxApps) return;
-    apps.add(app);
-  }
+  /// 添加 App，数量不限
+  void addApp(AppInfo app) => apps.add(app);
 
   /// 遥控器左右移动焦点：到头循环到另一端，保持光标始终锁在卡片区
   void moveFocus(int delta) {
     final count = apps.length;
     if (count == 0) return;
     focusedIndex.value = (focusedIndex.value + delta + count) % count;
+  }
+
+  /// 焦点移出可视区域时滚动列表，只滚最小距离保持当前卡片完整可见
+  void _ensureCardVisible(int index) {
+    if (!cardScrollController.hasClients) return;
+    final position = cardScrollController.position;
+    // 列表首次布局完成前视口尺寸尚未分配，此时计算滚动偏移没有意义
+    if (!position.hasContentDimensions || !position.hasViewportDimension) return;
+    final start = cardPadding + index * cardStep;
+    final end = start + CharacterCard.width;
+    final viewStart = position.pixels;
+    final viewEnd = viewStart + position.viewportDimension;
+    if (start < viewStart) {
+      cardScrollController.animateTo(
+        start,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    } else if (end > viewEnd) {
+      cardScrollController.animateTo(
+        end - position.viewportDimension,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   /// 确认键：拉起当前焦点卡片；配了组件走显式 Intent，否则按包名拉起
@@ -126,9 +154,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     weekday.value = _weekdays[now.weekday - 1];
   }
 
-  /// 启动背景轮换：缓存优先立即显示，再异步拉取服务器配置覆盖。
-  /// 无缓存时等请求返回；两者都拿不到才用本地打包图片兜底。
+  /// 按设置加载背景：固定模式直接用设定图，不轮换；
+  /// 服务器模式缓存优先立即显示，再异步拉配置覆盖，都拿不到才用本地图兜底。
   Future<void> _startBackgroundRotation() async {
+    if (BackgroundService.mode == BackgroundMode.fixed) {
+      final fixed = BackgroundService.fixedImage;
+      if (fixed.isNotEmpty) {
+        _backgroundTimer?.cancel();
+        _backgroundTimer = null;
+        _backgroundImages = [fixed];
+        backgroundImage.value = fixed;
+        return;
+      }
+    }
+
     final cached = BackgroundService.cachedImages;
     if (cached.isNotEmpty) _applyBackgrounds(cached);
 
@@ -137,7 +176,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await BackgroundService.saveImages(remote);
       _applyBackgrounds(remote);
     } else if (cached.isEmpty) {
-      _applyBackgrounds(await _loadBackgroundImages());
+      _applyBackgrounds(await BackgroundService.loadLocalImages());
     }
   }
 
@@ -159,20 +198,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// 手动换一张背景（遥控器后退键触发），不重置 30 分钟定时器
   void refreshBackground() => _rotateBackground();
 
-  /// 从打包清单读取 images 目录下的图片路径，排除卡片贴图
-  /// 新版 Flutter 不再生成 AssetManifest.json，必须用官方 API 读清单
-  Future<List<String>> _loadBackgroundImages() async {
-    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-    return manifest
-        .listAssets()
-        .where((path) => path.startsWith(_imageDir))
-        .where(
-          (path) =>
-              !path.substring(_imageDir.length).startsWith(_cardImagePrefix),
-        )
-        .toList();
-  }
-
   /// 随机挑一张作为背景；只有一张时不重复赋值，避免无意义重建
   void _rotateBackground() {
     final images = _backgroundImages;
@@ -193,45 +218,27 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _backgroundTimer?.cancel();
+    cardScrollController.dispose();
     super.onClose();
   }
 
-  /// 初始化桌面 App；后续从原生层读取安装列表时替换这里
-  void _initApps() {
-    apps.addAll(const [
-      // 哔哩哔哩：品牌色 #FF6182 做底色，配一张本地插画贴图
-      AppInfo(
-        name: '哔哩哔哩',
-        textColor: Color(0xFFFF6182),
-        packageName: 'com.xiaodianshi.tv.yst',
-        backgroundColor: Color(0xFFFF6182),
-        imageAsset: 'assets/images/card_1.jpg',
-      ),
-      // 飞牛：品牌蓝底色 + 品牌蓝文字，配一张本地插画贴图
-      AppInfo(
-        name: '飞牛',
-        packageName: 'com.trim.tv',
-        textColor: Color(0xFF2D78F9),
-        backgroundColor: Color(0xFF2D78F9),
-        imageAsset: 'assets/images/card_2.jpg',
-      ),
-      // PC：小米播放器无标准 LAUNCHER 入口，用显式 Intent 直接切到 HDMI3
-      AppInfo(
-        name: '电脑',
-        packageName: 'com.xiaomi.mitv.tvplayer',
-        textColor: Color.fromARGB(255, 2, 176, 219),
-        imageAsset: 'assets/images/card_3.jpg',
-        launchAction: 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY',
-        launchComponent: 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity',
-        launchIntExtras: {'input': 25},
-      ),
-      // 月光：Moonlight Android 版包名，主 Activity 带 LEANBACK_LAUNCHER，电视可直接拉起
-      AppInfo(
-        name: '月光',
-        packageName: 'com.limelight',
-        textColor: Colors.grey,
-        imageAsset: 'assets/images/card_4.jpg',
-      ),
-    ]);
+  /// 上键：打开桌面设置页，返回后刷新卡片与背景
+  void openSettingsPage() {
+    Get.toNamed(RouteNames.settings)?.then((_) {
+      reloadApps();
+      _startBackgroundRotation();
+    });
   }
+
+  /// 从本地配置加载全部卡片；设置页保存后也走这里刷新
+  Future<void> _loadApps() async {
+    apps.assignAll(await AppConfigService.loadApps());
+    // 配置数量变化后焦点可能越界，夹回合法范围
+    if (focusedIndex.value >= apps.length) {
+      focusedIndex.value = apps.isEmpty ? 0 : apps.length - 1;
+    }
+  }
+
+  /// 设置页保存后调用，重新读取配置刷新首页卡片
+  Future<void> reloadApps() => _loadApps();
 }

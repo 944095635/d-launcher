@@ -1,9 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+
 import 'package:dlauncher/services/prefs_service.dart';
 
-/// 背景图配置服务：从服务器拉取背景清单，缓存到本地，供首页读取。
+/// 背景展示方式：固定一张，或从服务器清单随机轮换
+enum BackgroundMode { fixed, server }
+
+/// 背景图配置服务：管理展示方式、固定图地址，以及服务器清单的拉取与缓存。
 class BackgroundService {
   /// 接口地址常量
   static const String baseUrl = 'http://music.dmskin.com';
@@ -12,7 +17,28 @@ class BackgroundService {
   static const String configPath = '/music/dLauncher/bg.json';
 
   static const String _cacheKey = 'background_images';
+  static const String _modeKey = 'background_mode';
+  static const String _fixedImageKey = 'background_fixed_image';
   static const Duration _timeout = Duration(seconds: 8);
+
+  static const String _imageDir = 'assets/images/';
+  static const String _cardImagePrefix = 'card_';
+
+  /// 当前展示方式，默认服务器随机
+  static BackgroundMode get mode =>
+      PrefsService.prefs.getString(_modeKey) == 'fixed'
+          ? BackgroundMode.fixed
+          : BackgroundMode.server;
+
+  static Future<bool> saveMode(BackgroundMode mode) =>
+      PrefsService.prefs.setString(_modeKey, mode.name);
+
+  /// 固定图地址：本地 asset 路径或 http URL
+  static String get fixedImage =>
+      PrefsService.prefs.getString(_fixedImageKey) ?? '';
+
+  static Future<bool> saveFixedImage(String image) =>
+      PrefsService.prefs.setString(_fixedImageKey, image);
 
   /// 读取缓存的背景图地址；未缓存返回空列表
   static List<String> get cachedImages =>
@@ -53,5 +79,19 @@ class BackgroundService {
     if (path.startsWith('http')) return path;
     final separator = path.startsWith('/') ? '' : '/';
     return '$baseUrl$separator$path';
+  }
+
+  /// 打包在 images 目录下的背景图，排除卡片贴图；供设置页本地选择使用
+  /// 新版 Flutter 不再生成 AssetManifest.json，必须用官方 API 读清单
+  static Future<List<String>> loadLocalImages() async {
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    return manifest
+        .listAssets()
+        .where((path) => path.startsWith(_imageDir))
+        .where(
+          (path) =>
+              !path.substring(_imageDir.length).startsWith(_cardImagePrefix),
+        )
+        .toList();
   }
 }

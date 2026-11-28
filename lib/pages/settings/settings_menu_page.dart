@@ -1,0 +1,91 @@
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:dlauncher/app/route_names.dart';
+
+/// 设置一级菜单：背景设置 / App 设置，遥控器上下选择、确认进入。
+class SettingsMenuPage extends StatefulWidget {
+  const SettingsMenuPage({super.key});
+
+  @override
+  State<SettingsMenuPage> createState() => _SettingsMenuPageState();
+}
+
+class _SettingsMenuPageState extends State<SettingsMenuPage> {
+  static const _items = ['背景设置', 'App 设置'];
+  static const _routes = [RouteNames.settingsBackground, RouteNames.settingsApps];
+
+  int _focused = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
+      appBar: AppBar(
+        title: const Text('桌面设置'),
+        backgroundColor: const Color(0xFF242424),
+      ),
+      // 返回键不在此处理：GetX 路由会自行弹栈，重复调用 Get.back 会退两层
+      body: Focus(
+        autofocus: true,
+        onKeyEvent: _onKeyEvent,
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          itemCount: _items.length,
+          itemBuilder: (context, index) => _buildItem(index),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItem(int index) {
+    final selected = _focused == index;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 120),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF3A3A3A) : const Color(0xFF242424),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        spacing: 20,
+        children: [
+          Icon(
+            index == 0 ? Icons.image : Icons.apps,
+            color: selected ? Colors.amber : Colors.white54,
+            size: 28,
+          ),
+          Expanded(
+            child: Text(
+              _items[index],
+              style: const TextStyle(color: Colors.white, fontSize: 22),
+            ),
+          ),
+          if (selected)
+            const Icon(Icons.chevron_right, color: Colors.amber, size: 26),
+        ],
+      ),
+    );
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowUp:
+        if (_focused > 0) setState(() => _focused--);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowDown:
+        if (_focused < _items.length - 1) setState(() => _focused++);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.select:
+      case LogicalKeyboardKey.enter:
+        Get.toNamed(_routes[_focused]);
+        return KeyEventResult.handled;
+      default:
+        // 返回键交回系统，由 GetX 路由弹栈
+        return KeyEventResult.ignored;
+    }
+  }
+}

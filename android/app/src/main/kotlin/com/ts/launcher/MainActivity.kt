@@ -75,6 +75,19 @@ class MainActivity : FlutterActivity() {
                 startActivity(intent)
                 result.success(true)
             }
+            "getInstalledApps" -> {
+                // 只返回有启动入口的应用，避免把无界面的系统服务列进设置页
+                val pm = packageManager
+                val apps = pm.getInstalledPackages(0).mapNotNull { info ->
+                    if (pm.getLaunchIntentForPackage(info.packageName) == null) {
+                        return@mapNotNull null
+                    }
+                    val label = info.applicationInfo?.loadLabel(pm)?.toString().orEmpty()
+                    if (label.isBlank()) return@mapNotNull null
+                    mapOf("name" to label, "packageName" to info.packageName)
+                }
+                result.success(apps)
+            }
             else -> result.notImplemented()
         }
     }

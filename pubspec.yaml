@@ -70,6 +70,7 @@ flutter:
   # 应用资源
   assets:
     - assets/images/
+    - assets/config/
 
   # 本地字体：电视端无法联网，字体随包发布
   fonts:
