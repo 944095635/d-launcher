@@ -19,6 +19,10 @@ class App extends StatelessWidget {
           primary: Colors.white,
         ),
         scaffoldBackgroundColor: Colors.black,
+        appBarTheme: AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
       ),
       initialRoute: AppRoutes.home,
       getPages: AppRoutes.pages,
