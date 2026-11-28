@@ -8,7 +8,6 @@ import 'package:dlauncher/app/route_names.dart';
 import 'package:dlauncher/models/app_info.dart';
 import 'package:dlauncher/services/app_config_service.dart';
 import 'package:dlauncher/services/background_service.dart';
-import 'package:dlauncher/services/card_image_service.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/services/weather_service.dart';
 
@@ -66,21 +65,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     _timer = Timer.periodic(_clockInterval, (_) => _updateClock());
     _loadApps();
     _startBackgroundRotation();
-    // 天气和卡片贴图清单都只在启动时拉一次，不随后台轮换或时钟刷新
+    // 天气只在启动时拉一次；卡片贴图清单改由选择页每次进入时实时拉取
     _loadWeather();
-    _loadCardImages();
   }
 
   /// 启动时拉取一次天气，失败则保留页面上的占位文字
   Future<void> _loadWeather() async {
     final info = await WeatherService.fetch();
     if (info != null) weatherText.value = info.toString();
-  }
-
-  /// 卡片贴图清单随首页启动拉一次：成功就覆盖缓存，失败保留旧缓存供编辑页使用
-  Future<void> _loadCardImages() async {
-    final remote = await CardImageService.fetchImages();
-    if (remote != null) await CardImageService.saveImages(remote);
   }
 
   /// 从后台回到前台立即校正，避免等下一次周期检查才刷新

@@ -44,24 +44,37 @@ class _CardGalleryPageState extends State<CardGalleryPage> {
 
   static const _duration = Duration(milliseconds: 250);
 
-  /// 空串代表「不使用卡片」，固定在首位；其余来自首页启动时拉取的服务器清单
-  late final List<String> _images = [
-    '',
-    ...CardImageService.cachedImages,
-  ];
+  /// 空串代表「不使用卡片」，固定在首位；其余为每次进入时从服务器拉取的清单
+  List<String> _images = const [''];
 
   int _current = 0;
+
+  /// 清单拉取中：此时不响应翻页/选中，避免误选「不使用卡片」
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    final initial = _images.indexOf(widget.initialImage ?? '');
-    _current = initial < 0 ? 0 : initial;
+    _load();
+  }
+
+  /// 每次进入页面都实时拉取，不用缓存，保证服务器改动立即生效
+  Future<void> _load() async {
+    final remote = await CardImageService.fetchImages();
+    if (!mounted) return;
+    final images = <String>['', ...?remote];
+    // 优先停在进入前已选的贴图；服务器已移除该项则回到第一项
+    final initial = images.indexOf(widget.initialImage ?? '');
+    setState(() {
+      _images = images;
+      _current = initial < 0 ? 0 : initial;
+      _loading = false;
+    });
   }
 
   /// 左右键翻页，确认键选中当前项；返回键交回系统由 GetX 弹栈（返回 null 即取消）
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (_loading || event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowLeft:
         if (_current > 0) _goTo(_current - 1);
@@ -107,55 +120,59 @@ class _CardGalleryPageState extends State<CardGalleryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('选择卡片 ${_current + 1}/${_images.length}'),
+        title: Text(
+          _loading ? '选择卡片' : '选择卡片 ${_current + 1}/${_images.length}',
+        ),
       ),
       body: Focus(
         autofocus: true,
         onKeyEvent: _onKeyEvent,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final centerX = constraints.maxWidth / 2;
-            final centerY = constraints.maxHeight / 2;
-            // 间距略小于卡片显示宽，前后卡才靠拢并重叠一点点
-            final step = CharacterCard.width * _cardScale * _stepRatio;
-            // 由远到近排列，当前卡最后加入 Stack，绘制在最上层
-            final order = <int>[];
-            for (var distance = _sideCount; distance >= 1; distance--) {
-              final left = _current - distance;
-              final right = _current + distance;
-              if (left >= 0) order.add(left);
-              if (right < _images.length) order.add(right);
-            }
-            order.add(_current);
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              // 触屏左右滑动翻页；电视上主要用遥控器左右键
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity < 0 && _current < _images.length - 1) {
-                  _goTo(_current + 1);
-                } else if (velocity > 0 && _current > 0) {
-                  _goTo(_current - 1);
-                }
-              },
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  for (final index in order)
-                    AnimatedPositioned(
-                      key: ValueKey(index),
-                      duration: _duration,
-                      curve: Curves.easeOut,
-                      left: centerX - CharacterCard.width / 2 +
-                          (index - _current) * step,
-                      top: centerY - CharacterCard.height / 2,
-                      child: _buildCard(index),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final centerX = constraints.maxWidth / 2;
+                  final centerY = constraints.maxHeight / 2;
+                  // 间距略小于卡片显示宽，前后卡才靠拢并重叠一点点
+                  final step = CharacterCard.width * _cardScale * _stepRatio;
+                  // 由远到近排列，当前卡最后加入 Stack，绘制在最上层
+                  final order = <int>[];
+                  for (var distance = _sideCount; distance >= 1; distance--) {
+                    final left = _current - distance;
+                    final right = _current + distance;
+                    if (left >= 0) order.add(left);
+                    if (right < _images.length) order.add(right);
+                  }
+                  order.add(_current);
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    // 触屏左右滑动翻页；电视上主要用遥控器左右键
+                    onHorizontalDragEnd: (details) {
+                      final velocity = details.primaryVelocity ?? 0;
+                      if (velocity < 0 && _current < _images.length - 1) {
+                        _goTo(_current + 1);
+                      } else if (velocity > 0 && _current > 0) {
+                        _goTo(_current - 1);
+                      }
+                    },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        for (final index in order)
+                          AnimatedPositioned(
+                            key: ValueKey(index),
+                            duration: _duration,
+                            curve: Curves.easeOut,
+                            left: centerX - CharacterCard.width / 2 +
+                                (index - _current) * step,
+                            top: centerY - CharacterCard.height / 2,
+                            child: _buildCard(index),
+                          ),
+                      ],
                     ),
-                ],
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }
