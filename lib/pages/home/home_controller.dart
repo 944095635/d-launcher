@@ -10,7 +10,6 @@ import 'package:dlauncher/services/app_config_service.dart';
 import 'package:dlauncher/services/background_service.dart';
 import 'package:dlauncher/services/platform_service.dart';
 import 'package:dlauncher/services/weather_service.dart';
-import 'package:dlauncher/widgets/character_card.dart';
 
 /// 首页状态：实时时钟 + 桌面 App 列表。
 class HomeController extends GetxController with WidgetsBindingObserver {
@@ -37,18 +36,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// 当前获得焦点的卡片索引，遥控器左右键切换
   final focusedIndex = 0.obs;
 
-  /// 卡片列表滚动条，焦点移出视野时由控制器滚入
-  final cardScrollController = ScrollController();
-
   /// 首页背景图路径，定时从 images 目录随机切换
   final backgroundImage = ''.obs;
 
   static const _weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 
-  /// 卡片列表的左右留白、卡片间距与横向占位宽度，布局和焦点滚动共用
-  static const cardPadding = 30.0;
-  static const cardSpacing = 30.0;
-  static const cardStep = CharacterCard.width + cardSpacing;
+  /// 首页固定展示的卡片数量，焦点走到第 5 张时窗口整体左移一张
+  static const visibleCardCount = 4;
 
   /// 时钟检查间隔：30 秒足够，回前台会另行立即校正
   static const _clockInterval = Duration(seconds: 30);
@@ -73,8 +67,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     _startBackgroundRotation();
     // 天气只在启动时拉一次，不随后台轮换或时钟刷新
     _loadWeather();
-    // 焦点变化时把卡片滚入视野；列表尚未挂载时由滚动控制器判空跳过
-    ever(focusedIndex, _ensureCardVisible);
   }
 
   /// 启动时拉取一次天气，失败则保留页面上的占位文字
@@ -89,39 +81,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) _updateClock();
   }
 
-  /// 添加 App，数量不限
-  void addApp(AppInfo app) => apps.add(app);
-
-  /// 遥控器左右移动焦点：到头循环到另一端，保持光标始终锁在卡片区
+  /// 遥控器左右移动焦点：到头不循环，停在当前端
   void moveFocus(int delta) {
-    final count = apps.length;
-    if (count == 0) return;
-    focusedIndex.value = (focusedIndex.value + delta + count) % count;
-  }
-
-  /// 焦点移出可视区域时滚动列表，只滚最小距离保持当前卡片完整可见
-  void _ensureCardVisible(int index) {
-    if (!cardScrollController.hasClients) return;
-    final position = cardScrollController.position;
-    // 列表首次布局完成前视口尺寸尚未分配，此时计算滚动偏移没有意义
-    if (!position.hasContentDimensions || !position.hasViewportDimension) return;
-    final start = cardPadding + index * cardStep;
-    final end = start + CharacterCard.width;
-    final viewStart = position.pixels;
-    final viewEnd = viewStart + position.viewportDimension;
-    if (start < viewStart) {
-      cardScrollController.animateTo(
-        start,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    } else if (end > viewEnd) {
-      cardScrollController.animateTo(
-        end - position.viewportDimension,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    }
+    final next = focusedIndex.value + delta;
+    if (next < 0 || next >= apps.length) return;
+    focusedIndex.value = next;
   }
 
   /// 确认键：拉起当前焦点卡片；配了组件走显式 Intent，否则按包名拉起
@@ -218,7 +182,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _backgroundTimer?.cancel();
-    cardScrollController.dispose();
     super.onClose();
   }
 

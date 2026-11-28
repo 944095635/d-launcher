@@ -1,8 +1,10 @@
 import 'package:flutter/services.dart';
+
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/app/route_names.dart';
+import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 设置一级菜单：背景设置 / App 设置，遥控器上下选择、确认进入。
 class SettingsMenuPage extends StatefulWidget {
@@ -18,6 +20,15 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
 
   int _focused = 0;
 
+  /// 单项约 72 高，焦点移出视野时用于定位
+  late final _scroll = FocusScrollHelper(estimatedItemHeight: 72);
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +42,7 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
         autofocus: true,
         onKeyEvent: _onKeyEvent,
         child: ListView.builder(
+          controller: _scroll.controller,
           padding: const EdgeInsets.symmetric(vertical: 12),
           itemCount: _items.length,
           itemBuilder: (context, index) => _buildItem(index),
@@ -42,6 +54,7 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
   Widget _buildItem(int index) {
     final selected = _focused == index;
     return AnimatedContainer(
+      key: _scroll.keyOf(index),
       duration: const Duration(milliseconds: 120),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -74,10 +87,16 @@ class _SettingsMenuPageState extends State<SettingsMenuPage> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
-        if (_focused > 0) setState(() => _focused--);
+        if (_focused > 0) {
+          setState(() => _focused--);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
-        if (_focused < _items.length - 1) setState(() => _focused++);
+        if (_focused < _items.length - 1) {
+          setState(() => _focused++);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:

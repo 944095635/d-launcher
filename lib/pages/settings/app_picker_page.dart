@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/models/installed_app.dart';
 import 'package:dlauncher/pages/settings/settings_controller.dart';
+import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 包名点选页：列出可拉起的应用，遥控器上下选择、确认键回填。
 class AppPickerPage extends StatefulWidget {
@@ -15,6 +16,15 @@ class AppPickerPage extends StatefulWidget {
 
 class _AppPickerPageState extends State<AppPickerPage> {
   int _focused = 0;
+
+  /// 单项约 88 高（含包名副标题），焦点移出视野时用于定位
+  late final _scroll = FocusScrollHelper(estimatedItemHeight: 88);
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +49,13 @@ class _AppPickerPageState extends State<AppPickerPage> {
             );
           }
           return ListView.builder(
+            controller: _scroll.controller,
             itemCount: controller.installedApps.length,
             itemBuilder: (context, index) {
               final app = controller.installedApps[index];
               final selected = _focused == index;
               return AnimatedContainer(
+                key: _scroll.keyOf(index),
                 duration: const Duration(milliseconds: 120),
                 margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -93,11 +105,15 @@ class _AppPickerPageState extends State<AppPickerPage> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
-        if (_focused > 0) setState(() => _focused--);
+        if (_focused > 0) {
+          setState(() => _focused--);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
         if (_focused < controller.installedApps.length - 1) {
           setState(() => _focused++);
+          _scroll.ensureVisible(_focused);
         }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:

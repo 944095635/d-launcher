@@ -183,40 +183,56 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  /// 右侧应用卡片：横向 ListView，数量不限；焦点变化由控制器滚入视野
+  /// 右侧应用卡片：固定渲染 4 张，焦点越过第 4 张时窗口整体左移一张
   Widget _buildCards() {
+    // 卡片横向步长，小于卡宽以保留原来层叠的视觉效果
+    const step = 160.0;
+    const visible = HomeController.visibleCardCount;
     return Focus(
       // 进入首页自动聚焦到卡片区，遥控器左右键在卡片间切换
       autofocus: true,
       onKeyEvent: _onKeyEvent,
-      // 外层 Obx 只追踪卡片数量，焦点变化由每张卡自身的 Obx 处理，避免整表重建
-      child: Obx(
-        () => ListView.builder(
-          controller: controller.cardScrollController,
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(
-            horizontal: HomeController.cardPadding,
-            vertical: 20,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          // 容器按固定 4 张的占位计算，改卡片尺寸时需同步这里
+          width: 30 + (visible - 1) * step + CharacterCard.width + 30,
+          height: 30 + CharacterCard.height + 30,
+          child: Obx(
+            () {
+              final focused = controller.focusedIndex.value;
+              final count = controller.apps.length;
+              // 焦点进入第 5 张起窗口右端跟着走，左端同步滑出；到末尾就停住
+              final maxStart = count > visible ? count - visible : 0;
+              final start = (focused - (visible - 1)).clamp(0, maxStart).toInt();
+              // 不足 4 张时把卡片排到右侧槽位，右端与满屏时对齐
+              final shown = (count - start).clamp(0, visible).toInt();
+              final rightOffset = visible - shown;
+              return Stack(
+                children: [
+                  for (var i = 0; i < shown; i++)
+                    AnimatedPositioned(
+                      // 以 AppInfo 实例作 key，窗口滑动时同一张卡能被识别，平滑位移而非闪现
+                      key: ValueKey(controller.apps[start + i]),
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      left: 30 + (i + rightOffset) * step,
+                      top: 30,
+                      child: CharacterCard(
+                        name: controller.apps[start + i].name,
+                        backgroundColor:
+                            controller.apps[start + i].backgroundColor ?? Colors.black,
+                        imageAsset: controller.apps[start + i].imageAsset,
+                        textColor: controller.apps[start + i].textColor,
+                        // 当前焦点卡片高亮
+                        isFocused: start + i == focused,
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-          itemCount: controller.apps.length,
-          itemBuilder: (context, index) {
-            final app = controller.apps[index];
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: HomeController.cardSpacing),
-                child: Obx(
-                  () => CharacterCard(
-                    name: app.name,
-                    backgroundColor: app.backgroundColor ?? Colors.black,
-                    imageAsset: app.imageAsset,
-                    textColor: app.textColor,
-                    // 当前焦点卡片高亮
-                    isFocused: controller.focusedIndex.value == index,
-                  ),
-                ),
-              ),
-            );
-          },
         ),
       ),
     );

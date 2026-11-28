@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:dlauncher/services/background_service.dart';
+import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 本地背景图点选页：列出打包图片，遥控器上下选择、确认键回填地址。
 class LocalImagePickerPage extends StatefulWidget {
@@ -16,10 +17,19 @@ class _LocalImagePickerPageState extends State<LocalImagePickerPage> {
   final _images = <String>[].obs;
   int _focused = 0;
 
+  /// 单项约 60 高，焦点移出视野时用于定位
+  late final _scroll = FocusScrollHelper(estimatedItemHeight: 60);
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -49,10 +59,12 @@ class _LocalImagePickerPageState extends State<LocalImagePickerPage> {
             );
           }
           return ListView.builder(
+            controller: _scroll.controller,
             itemCount: _images.length,
             itemBuilder: (context, index) {
               final selected = _focused == index;
               return AnimatedContainer(
+                key: _scroll.keyOf(index),
                 duration: const Duration(milliseconds: 120),
                 margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -89,10 +101,16 @@ class _LocalImagePickerPageState extends State<LocalImagePickerPage> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
-        if (_focused > 0) setState(() => _focused--);
+        if (_focused > 0) {
+          setState(() => _focused--);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
-        if (_focused < _images.length - 1) setState(() => _focused++);
+        if (_focused < _images.length - 1) {
+          setState(() => _focused++);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:

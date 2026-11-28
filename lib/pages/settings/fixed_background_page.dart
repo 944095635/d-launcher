@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:dlauncher/pages/settings/local_image_picker_page.dart';
 import 'package:dlauncher/pages/settings/text_input_dialog.dart';
 import 'package:dlauncher/services/background_service.dart';
+import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
 /// 固定背景来源：从本地打包图片点选，或手动输入图片地址（asset 路径 / URL）。
 class FixedBackgroundPage extends StatefulWidget {
@@ -19,6 +20,15 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
 
   int _focused = 0;
 
+  /// 单项约 72 高，焦点移出视野时用于定位
+  late final _scroll = FocusScrollHelper(estimatedItemHeight: 72);
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,6 +42,7 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
         autofocus: true,
         onKeyEvent: _onKeyEvent,
         child: ListView.builder(
+          controller: _scroll.controller,
           padding: const EdgeInsets.symmetric(vertical: 12),
           itemCount: _items.length,
           itemBuilder: (context, index) => _buildItem(index),
@@ -43,6 +54,7 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
   Widget _buildItem(int index) {
     final selected = _focused == index;
     return AnimatedContainer(
+      key: _scroll.keyOf(index),
       duration: const Duration(milliseconds: 120),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -75,10 +87,16 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
-        if (_focused > 0) setState(() => _focused--);
+        if (_focused > 0) {
+          setState(() => _focused--);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
-        if (_focused < _items.length - 1) setState(() => _focused++);
+        if (_focused < _items.length - 1) {
+          setState(() => _focused++);
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:

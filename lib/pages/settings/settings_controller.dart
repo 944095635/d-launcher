@@ -37,9 +37,11 @@ class SettingsController extends GetxController {
   }
 
   /// 删除当前焦点卡片；焦点在「新增」项时忽略
-  void deleteFocused() {
-    final index = focusedIndex.value;
-    if (index >= apps.length) return;
+  void deleteFocused() => deleteAt(focusedIndex.value);
+
+  /// 删除指定索引的卡片，供编辑页的删除入口调用
+  void deleteAt(int index) {
+    if (index < 0 || index >= apps.length) return;
     apps.removeAt(index);
     if (focusedIndex.value >= apps.length) {
       focusedIndex.value = apps.isEmpty ? 0 : apps.length - 1;

@@ -1,5 +1,29 @@
 import 'package:material_ui/material_ui.dart';
 
+/// 卡片启动类型：普通应用，或小米电视的三个 HDMI 信号源。
+/// HDMI 的 action/component/input 是固定组合，用户选类型即可，不必手填参数。
+enum AppType {
+  app(label: '普通 App', input: null),
+  hdmi1(label: 'HDMI 1', input: 23),
+  hdmi2(label: 'HDMI 2', input: 24),
+  hdmi3(label: 'HDMI 3', input: 25);
+
+  const AppType({required this.label, required this.input});
+
+  /// 编辑页显示的名字
+  final String label;
+
+  /// 信号源对应的 input 值；普通应用为 null
+  final int? input;
+
+  bool get isHdmi => input != null;
+
+  /// 小米电视播放器包名和信号源入口，三个 HDMI 类型共用
+  static const hdmiPackage = 'com.xiaomi.mitv.tvplayer';
+  static const hdmiAction = 'com.xiaomi.mitv.tvplayer.EXTSRC_PLAY';
+  static const hdmiComponent = 'com.xiaomi.mitv.tvplayer/.ExternalSourceActivity';
+}
+
 /// 桌面 App 信息：卡片展示与后续拉起应用的数据载体。
 class AppInfo {
   const AppInfo({
@@ -36,6 +60,39 @@ class AppInfo {
 
   /// 卡片文字颜色，默认白，适配深色系卡面
   final Color textColor;
+
+  /// 由底层启动参数反推类型，兼容旧配置：配了显式组件就是信号源，按 input 值区分
+  AppType get appType {
+    if (launchComponent == null || launchComponent!.isEmpty) return AppType.app;
+    final input = launchIntExtras?['input'];
+    return AppType.values.firstWhere(
+      (type) => type.isHdmi && type.input == input,
+      orElse: () => AppType.hdmi3,
+    );
+  }
+
+  /// 切换类型：信号源写入固定的 action/component/input，普通 App 则清掉这些参数
+  AppInfo withAppType(AppType type) {
+    if (type.isHdmi) {
+      return AppInfo(
+        name: name,
+        packageName: AppType.hdmiPackage,
+        launchAction: AppType.hdmiAction,
+        launchComponent: AppType.hdmiComponent,
+        launchIntExtras: {'input': type.input!},
+        backgroundColor: backgroundColor,
+        imageAsset: imageAsset,
+        textColor: textColor,
+      );
+    }
+    return AppInfo(
+      name: name,
+      packageName: packageName,
+      backgroundColor: backgroundColor,
+      imageAsset: imageAsset,
+      textColor: textColor,
+    );
+  }
 
   /// 从 JSON 还原；颜色用 #AARRGGBB 字符串，缺省时按构造函数的默认值处理
   factory AppInfo.fromJson(Map<String, dynamic> json) {

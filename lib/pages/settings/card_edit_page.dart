@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -7,8 +8,10 @@ import 'package:dlauncher/models/installed_app.dart';
 import 'package:dlauncher/pages/settings/app_picker_page.dart';
 import 'package:dlauncher/pages/settings/settings_controller.dart';
 import 'package:dlauncher/pages/settings/text_input_dialog.dart';
+import 'package:dlauncher/widgets/character_card.dart';
+import 'package:dlauncher/widgets/focus_scroll_helper.dart';
 
-/// 单张卡片编辑页：上下切字段，确认键修改，返回键保存当前卡片。
+/// 单张卡片编辑页：左侧实时预览卡片，右侧菜单上下切字段并修改，最后一项可删除。
 class CardEditPage extends StatefulWidget {
   const CardEditPage({super.key, required this.index});
 
@@ -38,15 +41,26 @@ class _CardEditPageState extends State<CardEditPage> {
     'assets/images/card_4.jpg',
   ];
 
-  static const _fields = ['名称', '包名', '卡面贴图', '文字颜色', '背景颜色'];
+  static const _fields = ['名称', '类型', '包名', '卡面贴图', '文字颜色', '背景颜色', '删除卡片'];
 
   late AppInfo _app;
   int _focused = 0;
+  /// 删除是二次确认操作：首次按确认键只武装，再按一次才真正删除
+  bool _deleteArmed = false;
+
+  /// 单项约 72 高，焦点移出视野时用于定位
+  late final _scroll = FocusScrollHelper(estimatedItemHeight: 72);
 
   @override
   void initState() {
     super.initState();
     _app = Get.find<SettingsController>().apps[widget.index];
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -58,21 +72,51 @@ class _CardEditPageState extends State<CardEditPage> {
         backgroundColor: const Color(0xFF242424),
       ),
       // 返回键不在此处理：GetX 路由会自行弹栈，重复调用 Get.back 会退两层
-      body: Focus(
-        autofocus: true,
-        onKeyEvent: _onKeyEvent,
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          itemCount: _fields.length,
-          itemBuilder: (context, index) => _buildField(index),
-        ),
+      body: Row(
+        crossAxisAlignment: .stretch,
+        children: [
+          // 左侧 1 份实时预览卡片，右侧 3 份是编辑菜单
+          Expanded(flex: 2, child: _buildPreview()),
+          Expanded(
+            flex: 5,
+            child: Focus(
+              autofocus: true,
+              onKeyEvent: _onKeyEvent,
+              child: ListView.builder(
+                controller: _scroll.controller,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: _fields.length,
+                itemBuilder: (context, index) => _buildField(index),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 按当前编辑值渲染卡片，改颜色/贴图/名称后 setState 即时反映到这里
+  Widget _buildPreview() {
+    return FittedBox(
+      fit: .none,
+      child: CharacterCard(
+        name: _app.name,
+        backgroundColor: _app.backgroundColor ?? Colors.black,
+        imageAsset: _app.imageAsset,
+        textColor: _app.textColor,
+        // 预览态固定高亮，和首页聚焦卡片的样子一致
+        isFocused: true,
       ),
     );
   }
 
   Widget _buildField(int index) {
     final selected = _focused == index;
+    final isDelete = index == _fields.length - 1;
+    // 删除项整行用红色区分，和普通字段一眼可分
+    final accent = isDelete ? Colors.redAccent : Colors.white;
     return AnimatedContainer(
+      key: _scroll.keyOf(index),
       duration: const Duration(milliseconds: 120),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -87,17 +131,24 @@ class _CardEditPageState extends State<CardEditPage> {
             width: 120,
             child: Text(
               _fields[index],
-              style: const TextStyle(color: Colors.white70, fontSize: 20),
+              style: TextStyle(
+                color: isDelete ? Colors.redAccent : Colors.white70,
+                fontSize: 20,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               _fieldValue(index),
-              style: const TextStyle(color: Colors.white, fontSize: 20),
+              style: TextStyle(color: accent, fontSize: 20),
             ),
           ),
           if (selected)
-            const Icon(Icons.chevron_right, color: Colors.amber, size: 26),
+            Icon(
+              isDelete ? Icons.delete_outline : Icons.chevron_right,
+              color: isDelete ? Colors.redAccent : Colors.amber,
+              size: 26,
+            ),
         ],
       ),
     );
@@ -108,15 +159,19 @@ class _CardEditPageState extends State<CardEditPage> {
       case 0:
         return _app.name;
       case 1:
-        return _app.packageName ?? '（未设置）';
+        return _app.appType.label;
       case 2:
-        return _app.imageAsset ?? '（无贴图）';
+        return _app.packageName ?? '（未设置）';
       case 3:
-        return _colorLabel(_app.textColor.toARGB32());
+        return _app.imageAsset ?? '（无贴图）';
       case 4:
+        return _colorLabel(_app.textColor.toARGB32());
+      case 5:
         return _app.backgroundColor == null
             ? '（默认黑）'
             : _colorLabel(_app.backgroundColor!.toARGB32());
+      case 6:
+        return _deleteArmed ? '再按一次确认删除' : '删除这张卡片';
       default:
         return '';
     }
@@ -129,10 +184,23 @@ class _CardEditPageState extends State<CardEditPage> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
-        if (_focused > 0) setState(() => _focused--);
+        if (_focused > 0) {
+          // 离开删除项就撤销武装，避免误删
+          setState(() {
+            _focused--;
+            _deleteArmed = false;
+          });
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
-        if (_focused < _fields.length - 1) setState(() => _focused++);
+        if (_focused < _fields.length - 1) {
+          setState(() {
+            _focused++;
+            _deleteArmed = false;
+          });
+          _scroll.ensureVisible(_focused);
+        }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
@@ -144,18 +212,30 @@ class _CardEditPageState extends State<CardEditPage> {
     }
   }
 
-  /// 确认键：按字段类型采用不同编辑方式
+  /// 确认键：按字段类型采用不同编辑方式；删除项需二次确认
   Future<void> _editFocused() async {
+    if (_focused == _fields.length - 1) {
+      if (!_deleteArmed) {
+        setState(() => _deleteArmed = true);
+        return;
+      }
+      // 删除后当前卡片已失效，直接退回 App 设置页，不做写回
+      Get.find<SettingsController>().deleteAt(widget.index);
+      Get.back();
+      return;
+    }
     switch (_focused) {
       case 0:
         await _editName();
       case 1:
-        await _pickPackage();
+        _cycleType();
       case 2:
-        _cycleImage();
+        await _pickPackage();
       case 3:
-        _cycleColor(text: true);
+        _cycleImage();
       case 4:
+        _cycleColor(text: true);
+      case 5:
         _cycleColor(text: false);
     }
     // 每次修改即时写回 controller（内部落盘），返回键不再承担保存职责
@@ -189,6 +269,14 @@ class _CardEditPageState extends State<CardEditPage> {
         imageAsset: _app.imageAsset,
       );
     }
+  }
+
+  /// 类型在普通 App / HDMI 1 / HDMI 2 / HDMI 3 间循环，
+  /// 选信号源时自动填好固定的 action/component/input
+  void _cycleType() {
+    final current = _app.appType;
+    final next = AppType.values[(current.index + 1) % AppType.values.length];
+    _app = _app.withAppType(next);
   }
 
   void _cycleImage() {
