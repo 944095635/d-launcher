@@ -40,8 +40,14 @@ class _BackgroundGalleryPageState extends State<BackgroundGalleryPage> {
     super.dispose();
   }
 
-  /// 服务器清单优先、本地资源兜底，按原顺序去重
+  /// 每次进入都拉取服务器最新清单并覆盖首页缓存；失败时用旧缓存 + 本地资源兜底
   Future<void> _load() async {
+    // 实时拉取成功后立即覆盖缓存，首页下次启动即用上新清单
+    final remote = await BackgroundService.fetchImages();
+    if (remote != null && remote.isNotEmpty) {
+      await BackgroundService.saveImages(remote);
+    }
+
     List<String> localImages = const [];
     try {
       localImages = await BackgroundService.loadLocalImages();
@@ -49,7 +55,11 @@ class _BackgroundGalleryPageState extends State<BackgroundGalleryPage> {
       // 读取 asset 清单失败时仍可用服务器图，不影响选择页打开
     }
     final images = <String>[''];
-    for (final image in [...BackgroundService.cachedImages, ...localImages]) {
+    // 拉取成功用新清单，失败退回未覆盖的旧缓存
+    for (final image in [
+      ...(remote ?? BackgroundService.cachedImages),
+      ...localImages,
+    ]) {
       if (!images.contains(image)) images.add(image);
     }
     final initial = images.indexOf(widget.initialImage);
