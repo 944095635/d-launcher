@@ -48,50 +48,53 @@ class _AppPickerPageState extends State<AppPickerPage> {
               ),
             );
           }
-          return ListView.builder(
-            controller: _scroll.controller,
+          // 留白放在视口外的 Padding 里，滚动时顶部始终保留 20，不随内容滚走
+          return Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
-            itemCount: controller.installedApps.length,
-            itemBuilder: (context, index) {
-              final app = controller.installedApps[index];
-              final selected = _focused == index;
-              return AnimatedContainer(
-                key: _scroll.keyOf(index),
-                duration: const Duration(milliseconds: 120),
-                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: selected ? const Color(0xFF3A3A3A) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  spacing: 20,
-                  children: [
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      color: selected ? Colors.amber : Colors.white54,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        children: [
-                          Text(
-                            app.name,
-                            style: const TextStyle(color: Colors.white, fontSize: 22),
-                          ),
-                          Text(
-                            app.packageName,
-                            style: const TextStyle(color: Colors.white54, fontSize: 16),
-                          ),
-                        ],
+            child: ListView.builder(
+              controller: _scroll.controller,
+              itemCount: controller.installedApps.length,
+              itemBuilder: (context, index) {
+                final app = controller.installedApps[index];
+                final selected = _focused == index;
+                return AnimatedContainer(
+                  key: _scroll.keyOf(index),
+                  duration: const Duration(milliseconds: 120),
+                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: selected ? const Color(0xFF3A3A3A) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    spacing: 20,
+                    children: [
+                      Icon(
+                        selected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: selected ? Colors.amber : Colors.white54,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: .start,
+                          children: [
+                            Text(
+                              app.name,
+                              style: const TextStyle(color: Colors.white, fontSize: 22),
+                            ),
+                            Text(
+                              app.packageName,
+                              style: const TextStyle(color: Colors.white54, fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         }),
       ),

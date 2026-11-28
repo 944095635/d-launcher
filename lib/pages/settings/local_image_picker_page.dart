@@ -58,40 +58,43 @@ class _LocalImagePickerPageState extends State<LocalImagePickerPage> {
               ),
             );
           }
-          return ListView.builder(
-            controller: _scroll.controller,
+          // 留白放在视口外的 Padding 里，滚动时顶部始终保留 20，不随内容滚走
+          return Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
-            itemCount: _images.length,
-            itemBuilder: (context, index) {
-              final selected = _focused == index;
-              return AnimatedContainer(
-                key: _scroll.keyOf(index),
-                duration: const Duration(milliseconds: 120),
-                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: selected ? const Color(0xFF3A3A3A) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  spacing: 20,
-                  children: [
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      color: selected ? Colors.amber : Colors.white54,
-                    ),
-                    Expanded(
-                      child: Text(
-                        _images[index].split('/').last,
-                        style: const TextStyle(color: Colors.white, fontSize: 22),
+            child: ListView.builder(
+              controller: _scroll.controller,
+              itemCount: _images.length,
+              itemBuilder: (context, index) {
+                final selected = _focused == index;
+                return AnimatedContainer(
+                  key: _scroll.keyOf(index),
+                  duration: const Duration(milliseconds: 120),
+                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: selected ? const Color(0xFF3A3A3A) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    spacing: 20,
+                    children: [
+                      Icon(
+                        selected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: selected ? Colors.amber : Colors.white54,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      Expanded(
+                        child: Text(
+                          _images[index].split('/').last,
+                          style: const TextStyle(color: Colors.white, fontSize: 22),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         }),
       ),

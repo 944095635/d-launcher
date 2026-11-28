@@ -5,10 +5,7 @@ import 'package:dlauncher/app/routes.dart';
 
 /// 应用根组件：统一配置主题与首帧路由。
 class App extends StatelessWidget {
-  /// 首帧路由由启动状态预先决定，避免先渲染首页再跳转的闪屏
-  final String initialRoute;
-
-  const App({super.key, required this.initialRoute});
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +20,7 @@ class App extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.black,
       ),
-      initialRoute: initialRoute,
+      initialRoute: AppRoutes.home,
       getPages: AppRoutes.pages,
     );
   }

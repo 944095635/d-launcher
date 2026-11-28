@@ -7,7 +7,6 @@ import 'package:dlauncher/pages/settings/background_settings_page.dart';
 import 'package:dlauncher/pages/settings/settings_controller.dart';
 import 'package:dlauncher/pages/settings/settings_menu_page.dart';
 import 'package:dlauncher/pages/settings/settings_page.dart';
-import 'package:dlauncher/pages/splash/splash_page.dart';
 
 /// 首页依赖绑定：控制器随路由注册，生命周期由 GetX 管理。
 class HomeBinding extends Binding {
@@ -31,9 +30,6 @@ class SettingsBinding extends Binding {
 
 /// 路由集中管理：新增页面只需在这里登记。
 class AppRoutes {
-  /// 启动屏幕路由名
-  static const splash = RouteNames.splash;
-
   /// 首页路由名
   static const home = RouteNames.home;
 
@@ -49,10 +45,6 @@ class AppRoutes {
   /// 路由表
   static final pages = [
     GetPage(
-      name: splash,
-      page: () => const SplashPage(),
-    ),
-    GetPage(
       name: home,
        transition: .fadeIn,
       page: () => const HomePage(),
@@ -61,7 +53,6 @@ class AppRoutes {
     GetPage(
       name: settings,
       page: () => const SettingsMenuPage(),
-      transition: .downToUp,
     ),
     GetPage(
       name: settingsBackground,

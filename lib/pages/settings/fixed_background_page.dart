@@ -41,11 +41,14 @@ class _FixedBackgroundPageState extends State<FixedBackgroundPage> {
       body: Focus(
         autofocus: true,
         onKeyEvent: _onKeyEvent,
-        child: ListView.builder(
-          controller: _scroll.controller,
+        // 留白放在视口外的 Padding 里，滚动时顶部始终保留 20，不随内容滚走
+        child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
-          itemCount: _items.length,
-          itemBuilder: (context, index) => _buildItem(index),
+          child: ListView.builder(
+            controller: _scroll.controller,
+            itemCount: _items.length,
+            itemBuilder: (context, index) => _buildItem(index),
+          ),
         ),
       ),
     );

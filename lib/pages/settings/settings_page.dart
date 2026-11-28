@@ -48,15 +48,18 @@ class _SettingsPageState extends State<SettingsPage> {
           final focused = controller.focusedIndex.value;
           // 末尾固定两项：新增卡片、恢复初始
           final addIndex = controller.apps.length;
-          return ListView.builder(
-            controller: _scroll.controller,
+          // 留白放在视口外的 Padding 里，滚动时顶部始终保留 20，不随内容滚走
+          return Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
-            itemCount: addIndex + 2,
-            itemBuilder: (context, index) {
-              if (index < addIndex) return _buildAppItem(index, focused);
-              if (index == addIndex) return _buildAddItem(focused);
-              return _buildResetItem(focused);
-            },
+            child: ListView.builder(
+              controller: _scroll.controller,
+              itemCount: addIndex + 2,
+              itemBuilder: (context, index) {
+                if (index < addIndex) return _buildAppItem(index, focused);
+                if (index == addIndex) return _buildAddItem(focused);
+                return _buildResetItem(focused);
+              },
+            ),
           );
         }),
       ),
