@@ -44,8 +44,8 @@ class _TextInputDialogState extends State<TextInputDialog> {
     super.dispose();
   }
 
-  /// 输入框内的遥控器按键：只负责把焦点从输入框挪走。
-  /// 确认键不提交内容——保存只由「确定」按钮自己被确认时触发。
+  /// 输入框：确认/下/右把焦点交给「取消」，不提交内容——
+  /// 保存只由「确定」按钮自己被确认时触发。
   KeyEventResult _onFieldKey(FocusNode node, KeyEvent event) {
     if (!_fieldFocus.hasFocus) return KeyEventResult.ignored;
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -54,13 +54,48 @@ class _TextInputDialogState extends State<TextInputDialog> {
       case LogicalKeyboardKey.enter:
       case LogicalKeyboardKey.arrowDown:
       case LogicalKeyboardKey.arrowRight:
-        // 焦点先落到「取消」：用户需自己用左右键移到「确定」再确认，
-        // 避免按一次确认就误保存
-        _fieldFocus.unfocus();
         _cancelFocus.requestFocus();
         return KeyEventResult.handled;
       default:
         // 文字输入、上下/左右微调光标等交回输入框自身处理
+        return KeyEventResult.ignored;
+    }
+  }
+
+  /// 取消按钮：上键回到输入框，右键到「确定」，左键已到边界吞掉。
+  /// 确认键不处理，交回 TextButton 自身触发取消。
+  KeyEventResult _onCancelKey(FocusNode node, KeyEvent event) {
+    if (!_cancelFocus.hasFocus) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowUp:
+        _fieldFocus.requestFocus();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+        _okFocus.requestFocus();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowLeft:
+        return KeyEventResult.handled;
+      default:
+        return KeyEventResult.ignored;
+    }
+  }
+
+  /// 确定按钮：上键回到输入框，左键到「取消」，右键已到边界吞掉。
+  /// 确认键不处理，交回 TextButton 自身触发保存。
+  KeyEventResult _onOkKey(FocusNode node, KeyEvent event) {
+    if (!_okFocus.hasFocus) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowUp:
+        _fieldFocus.requestFocus();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowLeft:
+        _cancelFocus.requestFocus();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+        return KeyEventResult.handled;
+      default:
         return KeyEventResult.ignored;
     }
   }
@@ -81,15 +116,21 @@ class _TextInputDialogState extends State<TextInputDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          focusNode: _cancelFocus,
-          onPressed: () => Get.back(),
-          child: const Text('取消'),
+        Focus(
+          onKeyEvent: _onCancelKey,
+          child: TextButton(
+            focusNode: _cancelFocus,
+            onPressed: () => Get.back(),
+            child: const Text('取消'),
+          ),
         ),
-        TextButton(
-          focusNode: _okFocus,
-          onPressed: () => Get.back(result: _controller.text.trim()),
-          child: const Text('确定'),
+        Focus(
+          onKeyEvent: _onOkKey,
+          child: TextButton(
+            focusNode: _okFocus,
+            onPressed: () => Get.back(result: _controller.text.trim()),
+            child: const Text('确定'),
+          ),
         ),
       ],
     );

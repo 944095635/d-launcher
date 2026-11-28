@@ -181,10 +181,8 @@ class _BackgroundGalleryPageState extends State<BackgroundGalleryPage> {
   Widget build(BuildContext context) {
     final controller = _pageController;
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: Text('选择背景 ${_current + 1}/${_images.length}'),
-        backgroundColor: const Color(0xFF242424),
         actions: [
           IconButton(
             icon: const Icon(Icons.link),

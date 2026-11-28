@@ -43,10 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Kotlin 编译缓存
+/android/.kotlin/
 
 # Widget Preview related
 .widget_preview/
 
 # 本地下载的壁纸素材，不纳入版本管理（前缀匹配）
 /assets/images/wallhaven*
-android/.kotlin/

@@ -33,10 +33,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: const Text('App 设置'),
-        backgroundColor: const Color(0xFF242424),
       ),
       // 返回键不在此处理：GetX 路由会自行弹栈，重复调用 Get.back 会退两层
       body: Focus(
