@@ -38,7 +38,7 @@ enum CardMaskColor {
   /// 渐变蒙版实际使用的颜色；none 用透明色，绘制处会整段跳过
   final Color color;
 
-  /// 是否绘制底部渐变蒙版与选中光效
+  /// 是否绘制底部渐变蒙版、卡片投影与选中光效
   bool get hasMask => this != none;
 }
 
@@ -80,7 +80,7 @@ class AppInfo {
   /// 卡片文字颜色，默认白，适配深色系卡面
   final Color textColor;
 
-  /// 卡面底部渐变蒙版，默认黑；none 时不画蒙版与选中光效，仅保留放大
+  /// 卡面底部渐变蒙版，默认黑；none 时不画蒙版、投影与选中光效，仅保留放大
   final CardMaskColor maskColor;
 
   /// 由底层启动参数反推类型，兼容旧配置：配了显式组件就是信号源，按 input 值区分

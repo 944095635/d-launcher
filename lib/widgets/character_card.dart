@@ -64,7 +64,7 @@ class CharacterCard extends StatelessWidget {
             color: backgroundColor,
             isFocused: isFocused,
             hasImage: imageAsset != null,
-            showGlow: maskColor.hasMask,
+            showEffects: maskColor.hasMask,
           ),
           child: ClipPath(
             clipper: _CardClipper(),
@@ -171,7 +171,7 @@ class _CardPainter extends CustomPainter {
     required this.color,
     required this.isFocused,
     required this.hasImage,
-    required this.showGlow,
+    required this.showEffects,
   });
 
   /// 由 App 背景色决定卡面底色
@@ -183,25 +183,27 @@ class _CardPainter extends CustomPainter {
   /// 有贴图时贴图铺满卡面，底色被完全遮住，跳过绘制
   final bool hasImage;
 
-  /// 焦点态是否画描边光效；不用蒙版时只留放大，不画光效
-  final bool showGlow;
+  /// 是否画投影和焦点光效；不用蒙版时只留放大，投影和光效都不画
+  final bool showEffects;
 
   @override
   void paint(Canvas canvas, Size size) {
     final path = _buildCardPath(size);
-    // 先画投影
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Colors.black54
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
-    );
+    // 投影：不用蒙版时连同光效一起去掉，只保留放大反馈
+    if (showEffects) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.black54
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+      );
+    }
     // 有贴图时底色被完全盖住，不必再画
     if (!hasImage) {
       canvas.drawPath(path, Paint()..color = color);
     }
     // 焦点态光效：不用蒙版时跳过，只保留外层 AnimatedScale 的放大反馈
-    if (isFocused && showGlow) {
+    if (isFocused && showEffects) {
       // 外层大范围柔光
       canvas.drawPath(
         path,
@@ -236,5 +238,5 @@ class _CardPainter extends CustomPainter {
       oldDelegate.color != color ||
       oldDelegate.isFocused != isFocused ||
       oldDelegate.hasImage != hasImage ||
-      oldDelegate.showGlow != showGlow;
+      oldDelegate.showEffects != showEffects;
 }
