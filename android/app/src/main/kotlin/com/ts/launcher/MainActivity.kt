@@ -1,7 +1,9 @@
 package com.ts.launcher
 
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -62,18 +64,54 @@ class MainActivity : FlutterActivity() {
                 result.success(true)
             }
             "openSettings" -> {
-                // 已确认小米电视设置包，直接拉起，不遍历、不试标准 Action
-                val packageName = call.argument<String>("packageName")
+                // 不同设备的设置包名不同：小米电视、原生 Android TV、普通 Android 各用自己的包。
+                // 没有可靠区分型号的办法，逐个探测候选包，命中哪个起哪个，全部落空再试标准 Action。
+                // 显式传入的包名（若配置）优先，便于覆盖特殊机型。
+                val candidates = mutableListOf<String>()
+                call.argument<String>("packageName")
                     ?.takeIf { it.isNotBlank() }
-                    ?: "com.xiaomi.mitv.settings"
-                val intent = packageManager.getLaunchIntentForPackage(packageName)
-                if (intent == null) {
-                    result.error("SETTINGS_NOT_FOUND", "No launch intent for $packageName", null)
-                    return
+                    ?.let { candidates.add(it) }
+                candidates.addAll(
+                    listOf(
+                        "com.xiaomi.mitv.settings", // 小米电视
+                        "com.android.tv.settings",  // 原生 Android TV（ATV / Google TV）
+                        "com.android.settings",     // 普通 Android 设置
+                    )
+                )
+
+                var launched = false
+                for (pkg in candidates.distinct()) {
+                    val intent = packageManager.getLaunchIntentForPackage(pkg)
+                        ?: continue // 该设备没有这个包，试下一个
+                    try {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        launched = true
+                        break
+                    } catch (ignored: ActivityNotFoundException) {
+                        // 包存在但没有可用入口，继续试下一个候选
+                    }
                 }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                result.success(true)
+
+                // 候选包都拉不起时，退回标准设置 Action，让系统自己解析入口
+                if (!launched) {
+                    val fallback = Intent(Settings.ACTION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (fallback.resolveActivity(packageManager) != null) {
+                        try {
+                            startActivity(fallback)
+                            launched = true
+                        } catch (ignored: ActivityNotFoundException) {
+                            // 标准 Action 也无入口，落到下面的失败分支
+                        }
+                    }
+                }
+
+                if (launched) {
+                    result.success(true)
+                } else {
+                    result.error("SETTINGS_NOT_FOUND", "No usable settings entry", null)
+                }
             }
             "getInstalledApps" -> {
                 // 只返回有启动入口的应用，避免把无界面的系统服务列进设置页

@@ -82,7 +82,7 @@ class HomePage extends GetView<HomeController> {
         ),
         // 内容层同样铺满，给 Row 的 Expanded 与 stretch 提供紧约束
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Row(
             // 两块之间间隔一致，用 spacing 统一，无需逐个插间距组件
             spacing: 30,
@@ -194,7 +194,7 @@ class HomePage extends GetView<HomeController> {
       onKeyEvent: _onKeyEvent,
       child: FittedBox(
         fit: BoxFit.contain,
-        alignment: Alignment.centerRight,
+        alignment: Alignment.bottomRight,
         child: SizedBox(
           // 容器按固定 4 张的占位计算，改卡片尺寸时需同步这里
           width: 30 + (visible - 1) * step + CharacterCard.width + 30,
